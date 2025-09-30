@@ -171,6 +171,8 @@ const SMALL_TO_LARGE_KANA: { [key: string]: string } = {
 
 const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
 
+const RESTRICTED_POKEMON = ["ロトム", "オドリドリ", "ミノマダム"]
+
 export function PokemonShiritoriGame() {
   const [pokemonDatabase, setPokemonDatabase] = useState<Map<string, PokemonData>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
@@ -325,6 +327,12 @@ export function PokemonShiritoriGame() {
     if (!currentInput.trim() || isAnimating) return
 
     const inputKatakana = hiraganaToKatakana(currentInput.trim())
+
+    if (RESTRICTED_POKEMON.includes(inputKatakana)) {
+      setMessage(`❌ ${inputKatakana}は使用できません（フォルム違いのため）`)
+      setTimeout(() => setMessage(""), 2000)
+      return
+    }
 
     const pokemonData = pokemonDatabase.get(inputKatakana)
     if (!pokemonData) {
