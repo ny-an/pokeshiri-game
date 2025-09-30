@@ -7,7 +7,7 @@ export type PokemonData = {
 
 export async function loadPokemonData(): Promise<Map<string, PokemonData>> {
   const CSV_URL =
-    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pokemon_data-BjA5Iz97gCO2WE6aduSFYGL2Vx2mb2.csv"
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pokemon-data_v2-ERSzI2cgqJxe4gIRkCtrwFDvM3FkUU.csv"
 
   try {
     const response = await fetch(CSV_URL)
