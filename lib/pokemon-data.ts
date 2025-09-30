@@ -40,3 +40,18 @@ export async function loadPokemonData(): Promise<Map<string, PokemonData>> {
     return new Map()
   }
 }
+
+export function getRandomPokemon(
+  pokemonMap: Map<string, PokemonData>,
+  filterFn?: (pokemon: PokemonData) => boolean,
+): PokemonData | null {
+  let pokemonArray = Array.from(pokemonMap.values())
+
+  if (filterFn) {
+    pokemonArray = pokemonArray.filter(filterFn)
+  }
+
+  if (pokemonArray.length === 0) return null
+  const randomIndex = Math.floor(Math.random() * pokemonArray.length)
+  return pokemonArray[randomIndex]
+}

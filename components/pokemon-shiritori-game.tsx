@@ -5,15 +5,23 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Zap, ArrowRight, RotateCcw } from "lucide-react"
-import { loadPokemonData, type PokemonData } from "@/lib/pokemon-data"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Sparkles, Zap, ArrowRight, RotateCcw, HelpCircle, Share2 } from "lucide-react"
+import { loadPokemonData, getRandomPokemon, type PokemonData } from "@/lib/pokemon-data"
 
 type Pokemon = {
   name: string
   types: string[]
 }
 
-type GameState = "playing" | "finished"
+type GameState = "playing" | "finished" | "cleared"
 
 const KATAKANA_LIST = [
   "ア",
@@ -136,25 +144,71 @@ const DAKUTEN_MAP: { [key: string]: string[] } = {
   ポ: ["ホ", "ボ", "ポ"],
 }
 
+const SMALL_TO_LARGE_KANA: { [key: string]: string } = {
+  ゃ: "ヤ",
+  ゅ: "ユ",
+  よ: "ヨ",
+  ャ: "ヤ",
+  ュ: "ユ",
+  ョ: "ヨ",
+  っ: "ツ",
+  ッ: "ツ",
+  ぁ: "ア",
+  ァ: "ア",
+  ぃ: "イ",
+  ィ: "イ",
+  ぅ: "ウ",
+  ゥ: "ウ",
+  ぇ: "エ",
+  ェ: "エ",
+  ぉ: "オ",
+  ォ: "オ",
+  ゎ: "ワ",
+  ヮ: "ワ",
+}
+
 export function PokemonShiritoriGame() {
   const [pokemonDatabase, setPokemonDatabase] = useState<Map<string, PokemonData>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
 
   const [gameState, setGameState] = useState<GameState>("playing")
-  const [startPokemon] = useState<Pokemon>({ name: "ピカチュウ", types: ["でんき"] })
-  const [goalPokemon] = useState<Pokemon>({ name: "リザードン", types: ["ほのお", "ひこう"] })
-  const [chain, setChain] = useState<Pokemon[]>([startPokemon])
+  const [startPokemon, setStartPokemon] = useState<Pokemon | null>(null)
+  const [goalPokemon, setGoalPokemon] = useState<Pokemon | null>(null)
+  const [chain, setChain] = useState<Pokemon[]>([])
   const [currentInput, setCurrentInput] = useState("")
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
   const [passesLeft, setPassesLeft] = useState(3)
   const [message, setMessage] = useState("")
-  const [usedNames, setUsedNames] = useState<Set<string>>(new Set([startPokemon.name]))
-  const [nextChar, setNextChar] = useState(getLastChar(startPokemon.name))
+  const [usedNames, setUsedNames] = useState<Set<string>>(new Set())
+  const [nextChar, setNextChar] = useState("")
+  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     loadPokemonData().then((data) => {
       setPokemonDatabase(data)
+      const start = getRandomPokemon(data, (pokemon) => {
+        const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
+        return lastChar !== "ン"
+      })
+      const goal = getRandomPokemon(data)
+
+      if (start && goal) {
+        const startPoke: Pokemon = {
+          name: start.name,
+          types: start.type2 ? [start.type1, start.type2] : [start.type1],
+        }
+        const goalPoke: Pokemon = {
+          name: goal.name,
+          types: goal.type2 ? [goal.type1, goal.type2] : [goal.type1],
+        }
+        setStartPokemon(startPoke)
+        setGoalPokemon(goalPoke)
+        setChain([startPoke])
+        setUsedNames(new Set([start.name]))
+        setNextChar(getLastChar(start.name))
+      }
+
       setIsLoading(false)
     })
   }, [])
@@ -172,6 +226,10 @@ export function PokemonShiritoriGame() {
         }
         index--
       }
+    }
+
+    if (SMALL_TO_LARGE_KANA[lastChar]) {
+      lastChar = SMALL_TO_LARGE_KANA[lastChar]
     }
 
     return lastChar
@@ -220,7 +278,7 @@ export function PokemonShiritoriGame() {
   }
 
   const handleSubmit = () => {
-    if (!currentInput.trim()) return
+    if (!currentInput.trim() || isAnimating) return
 
     const pokemonData = pokemonDatabase.get(currentInput)
     if (!pokemonData) {
@@ -231,6 +289,24 @@ export function PokemonShiritoriGame() {
 
     const lastPokemon = chain[chain.length - 1]
     const inputFirstChar = currentInput.charAt(0)
+
+    if (currentInput === goalPokemon?.name) {
+      const newPokemon: Pokemon = {
+        name: currentInput,
+        types: pokemonData.type2 ? [pokemonData.type1, pokemonData.type2] : [pokemonData.type1],
+      }
+
+      const typeMatch = checkTypeMatch(lastPokemon.types, newPokemon.types)
+      const points = typeMatch ? 2 : 1
+
+      setChain((prev) => [...prev, newPokemon])
+      setUsedNames((prev) => new Set([...prev, currentInput]))
+      setScore((prev) => prev + points + 10) // +10pt for goal
+      setCurrentInput("")
+      setGameState("cleared")
+      setMessage("🎉 ゴール到達！ +10pt")
+      return
+    }
 
     if (usedNames.has(currentInput)) {
       setScore((prev) => Math.max(0, prev - 5))
@@ -252,11 +328,21 @@ export function PokemonShiritoriGame() {
       types: pokemonData.type2 ? [pokemonData.type1, pokemonData.type2] : [pokemonData.type1],
     }
 
+    const typeMatch = checkTypeMatch(lastPokemon.types, newPokemon.types)
+    const points = typeMatch ? 2 : 1
+
     setChain((prev) => [...prev, newPokemon])
     setUsedNames((prev) => new Set([...prev, currentInput]))
-    setScore((prev) => prev + 1)
-    setCombo(0)
+    setScore((prev) => prev + points)
     setCurrentInput("")
+
+    if (typeMatch) {
+      setMessage(`✨ タイプ一致！ +${points}pt`)
+    } else {
+      setMessage(`+${points}pt`)
+    }
+
+    setIsAnimating(true)
 
     const lastChar = getLastChar(currentInput)
     if (lastChar === "ン") {
@@ -267,7 +353,10 @@ export function PokemonShiritoriGame() {
       setNextChar(lastChar)
     }
 
-    setTimeout(() => setMessage(""), 2000)
+    setTimeout(() => {
+      setMessage("")
+      setIsAnimating(false)
+    }, 500)
   }
 
   const handlePass = () => {
@@ -283,18 +372,44 @@ export function PokemonShiritoriGame() {
   }
 
   const handleReset = () => {
-    setChain([startPokemon])
+    const start = getRandomPokemon(pokemonDatabase, (pokemon) => {
+      const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
+      return lastChar !== "ン"
+    })
+    const goal = getRandomPokemon(pokemonDatabase)
+
+    if (start && goal) {
+      const startPoke: Pokemon = {
+        name: start.name,
+        types: start.type2 ? [start.type1, start.type2] : [start.type1],
+      }
+      const goalPoke: Pokemon = {
+        name: goal.name,
+        types: goal.type2 ? [goal.type1, goal.type2] : [goal.type1],
+      }
+      setStartPokemon(startPoke)
+      setGoalPokemon(goalPoke)
+      setChain([startPoke])
+      setUsedNames(new Set([start.name]))
+      setNextChar(getLastChar(start.name))
+    }
+
     setScore(0)
     setCombo(0)
     setPassesLeft(3)
     setCurrentInput("")
-    setUsedNames(new Set([startPokemon.name]))
     setGameState("playing")
     setMessage("")
-    setNextChar(getLastChar(startPokemon.name))
+    setIsAnimating(false)
   }
 
-  if (isLoading) {
+  const handleShareToX = () => {
+    const text = `ポケモンしりとりスコアアタック\n${startPokemon?.name} → ${goalPokemon?.name}\n\n${chain.length}匹つなげて ${score}pt 獲得！\n\n#ポケモンしりとり`
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
+    window.open(url, "_blank")
+  }
+
+  if (isLoading || !startPokemon || !goalPokemon) {
     return (
       <Card className="w-full max-w-2xl p-6 text-center">
         <p className="text-muted-foreground">ポケモンデータを読み込み中...</p>
@@ -304,9 +419,50 @@ export function PokemonShiritoriGame() {
 
   return (
     <Card className="w-full max-w-2xl p-4 md:p-5 space-y-3">
-      <div className="text-center space-y-1">
+      <div className="text-center space-y-1 relative">
         <h1 className="text-2xl md:text-3xl font-bold text-balance">🎮 ポケモンしりとり</h1>
         <p className="text-sm text-muted-foreground">スコアアタック</p>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-8 w-8">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>ゲームルール</DialogTitle>
+              <DialogDescription asChild>
+                <div className="space-y-3 text-sm text-left">
+                  <div>
+                    <h4 className="font-semibold mb-1">基本ルール</h4>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>スタートからゴールまでしりとりでつなぐ</li>
+                      <li>ポケモン名が「ー」で終わる場合、その前の文字を使用</li>
+                      <li>濁音・半濁音は清音でもOK（例：チ↔ヂ）</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">得点システム</h4>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>基本：+1pt</li>
+                      <li>タイプ一致：+2pt（前のポケモンとタイプが1つでも同じ）</li>
+                      <li>ゴール到達：+10pt</li>
+                      <li>任意パス：-2pt（最大3回）</li>
+                      <li>重複使用：-5pt</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">自動パス</h4>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>「ン」で終わる場合、自動的にランダムな文字に変更</li>
+                      <li>ペナルティなし</li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center justify-between gap-2">
@@ -400,8 +556,9 @@ export function PokemonShiritoriGame() {
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 placeholder="ポケモン名を入力..."
                 className="flex-1 h-9"
+                disabled={isAnimating}
               />
-              <Button onClick={handleSubmit} size="sm" className="px-4">
+              <Button onClick={handleSubmit} size="sm" className="px-4" disabled={isAnimating}>
                 送信
               </Button>
             </div>
@@ -410,15 +567,42 @@ export function PokemonShiritoriGame() {
           <div className="flex gap-2">
             <Button
               onClick={handlePass}
-              disabled={passesLeft === 0}
+              disabled={passesLeft === 0 || isAnimating}
               variant="outline"
               size="sm"
               className="flex-1 bg-transparent h-8"
             >
               パス (-2pt)
             </Button>
-            <Button onClick={() => setGameState("finished")} variant="outline" size="sm" className="flex-1 h-8">
+            <Button
+              onClick={() => setGameState("finished")}
+              variant="outline"
+              size="sm"
+              className="flex-1 h-8"
+              disabled={isAnimating}
+            >
               終了
+            </Button>
+          </div>
+        </div>
+      ) : gameState === "cleared" ? (
+        <div className="space-y-4 text-center py-4">
+          <div className="space-y-1.5">
+            <p className="text-4xl font-bold text-primary animate-in zoom-in">🎉 クリア！ 🎉</p>
+            <p className="text-5xl font-bold text-primary animate-in zoom-in">{score}pt</p>
+            <p className="text-sm text-muted-foreground">{chain.length}匹つなげました</p>
+            <p className="text-xs text-muted-foreground">
+              {startPokemon.name} → {goalPokemon.name}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Button onClick={handleShareToX} size="sm" className="w-full" variant="default">
+              <Share2 className="w-4 h-4 mr-2" />
+              Xに投稿しよう
+            </Button>
+            <Button onClick={handleReset} size="sm" className="w-full bg-transparent" variant="outline">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              もう一度プレイ
             </Button>
           </div>
         </div>
