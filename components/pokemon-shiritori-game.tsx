@@ -230,7 +230,7 @@ export function PokemonShiritoriGame() {
 
   useEffect(() => {
     if (chainEndRef.current) {
-      chainEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
+      chainEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" })
     }
   }, [chain])
 
@@ -409,7 +409,7 @@ export function PokemonShiritoriGame() {
     if (lastChar === "ン") {
       const randomChar = getRandomChar()
       setNextChar(randomChar)
-      setMessage(`⚡ 自動パス発動！次は「${randomChar}」から（ペナルティなし）`)
+      setMessage(`⚡ 自動チェンジ発動！次は「${randomChar}」から（ペナルティなし）`)
     } else {
       setNextChar(lastChar)
     }
@@ -417,7 +417,7 @@ export function PokemonShiritoriGame() {
     setTimeout(() => {
       setMessage("")
       setIsAnimating(false)
-    }, 500)
+    }, 2000)
   }
 
   const handlePass = () => {
@@ -429,7 +429,7 @@ export function PokemonShiritoriGame() {
       setPassesLeft((prev) => prev - 1)
       setScore((prev) => Math.max(0, prev - 2))
       setCombo(0)
-      setMessage(`⏭️ パス使用 -2pt 次は「${randomChar}」から`)
+      setMessage(`⏭️ チェンジ使用 -2pt 次は「${randomChar}」から`)
       setTimeout(() => setMessage(""), 2000)
     }
   }
@@ -482,6 +482,23 @@ export function PokemonShiritoriGame() {
     return `「${char}」`
   }
 
+  function renderCharVariants(char: string) {
+    const variants = DAKUTEN_MAP[char]
+    if (variants && variants.length > 1) {
+      return (
+        <>
+          {variants.map((v, index) => (
+            <span key={v}>
+              <span className="font-bold text-foreground text-base">「{v}」</span>
+              {index < variants.length - 1 && <span className="font-normal"> または </span>}
+            </span>
+          ))}
+        </>
+      )
+    }
+    return <span className="font-bold text-foreground text-base">「{char}」</span>
+  }
+
   const handleFinish = () => {
     saveHighScore(score)
     setGameState("finished")
@@ -496,7 +513,7 @@ export function PokemonShiritoriGame() {
   }
 
   return (
-    <Card className="w-full max-w-2xl p-4 md:p-5 space-y-3">
+    <Card className="w-full max-w-2xl p-4 md:p-5 space-y-2">
       <div className="text-center space-y-1 relative">
         <h1 className="text-2xl md:text-3xl font-bold text-balance">🎮 ポケモンしりとり</h1>
         <p className="text-sm text-muted-foreground">スコアアタック</p>
@@ -525,7 +542,7 @@ export function PokemonShiritoriGame() {
                       <li>基本：+1pt</li>
                       <li>タイプ一致コンボ：連鎖数×1pt（1連鎖=1pt、2連鎖=2pt、3連鎖=3pt...）</li>
                       <li>ゴール到達：+10pt</li>
-                      <li>任意パス：-2pt（最大3回、コンボリセット）</li>
+                      <li>任意チェンジ：-2pt（最大3回、コンボリセット）</li>
                       <li>重複使用：-5pt（コンボリセット）</li>
                     </ul>
                   </div>
@@ -538,7 +555,7 @@ export function PokemonShiritoriGame() {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">自動パス</h4>
+                    <h4 className="font-semibold mb-1">自動チェンジ</h4>
                     <ul className="list-disc list-inside space-y-1">
                       <li>「ン」で終わる場合、自動的にランダムな文字に変更</li>
                       <li>ペナルティなし</li>
@@ -599,15 +616,9 @@ export function PokemonShiritoriGame() {
         </div>
         <div className="bg-card rounded-lg p-2 border text-center">
           <p className="text-xl font-bold">{passesLeft}</p>
-          <p className="text-xs text-muted-foreground">パス残</p>
+          <p className="text-xs text-muted-foreground">チェンジ残</p>
         </div>
       </div>
-
-      {message && (
-        <div className="bg-primary/10 border border-primary rounded-lg p-2 text-center text-sm font-medium animate-in fade-in slide-in-from-top-2">
-          {message}
-        </div>
-      )}
 
       <div className="space-y-1.5">
         <p className="text-sm font-medium flex items-center gap-1.5">
@@ -639,7 +650,7 @@ export function PokemonShiritoriGame() {
                 >
                   <span className="text-xs">⏭️</span>
                   <span className="text-xs">
-                    パス使用: 「{item.fromChar}」→「{item.toChar}」
+                    チェンジ使用: 「{item.fromChar}」→「{item.toChar}」
                   </span>
                 </div>
               )
@@ -652,10 +663,7 @@ export function PokemonShiritoriGame() {
       {gameState === "playing" ? (
         <div className="space-y-2">
           <div className="space-y-1.5">
-            <p className="text-sm text-muted-foreground">
-              次は<span className="font-bold text-foreground text-base">{getCharVariants(nextChar)}</span>
-              で始まるポケモン
-            </p>
+            <p className="text-sm text-muted-foreground">次は{renderCharVariants(nextChar)}で始まるポケモン</p>
             <div className="flex gap-2">
               <Input
                 value={currentInput}
@@ -671,6 +679,12 @@ export function PokemonShiritoriGame() {
             </div>
           </div>
 
+          {message && (
+            <div className="bg-primary/10 border border-primary rounded-lg p-2 text-center text-sm font-medium animate-in fade-in slide-in-from-top-2">
+              {message}
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button
               onClick={handlePass}
@@ -679,7 +693,7 @@ export function PokemonShiritoriGame() {
               size="sm"
               className="flex-1 bg-transparent h-8"
             >
-              パス (-2pt)
+              チェンジ (-2pt)
             </Button>
             <Button
               onClick={handleFinish}
