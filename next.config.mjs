@@ -9,6 +9,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'export',
+  trailingSlash: true,
+  basePath: process.env.NODE_ENV === 'production' ? '/pokeshiri-game' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/pokeshiri-game/' : '',
 }
 
 export default nextConfig
