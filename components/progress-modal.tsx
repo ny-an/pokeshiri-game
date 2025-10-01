@@ -25,18 +25,37 @@ export function ProgressModal({
   is100Percent = false
 }: ProgressModalProps) {
   const [showConfetti, setShowConfetti] = useState(false)
+  const [confettiTimer, setConfettiTimer] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    // 既存のタイマーをクリア
+    if (confettiTimer) {
+      clearTimeout(confettiTimer)
+      setConfettiTimer(null)
+    }
+
     if (isOpen) {
       setShowConfetti(true)
-      // 100%達成時は10秒、通常時は3秒後にクラッカーを停止
-      const duration = is100Percent ? 10000 : 3000
-      const timer = setTimeout(() => {
-        setShowConfetti(false)
-      }, duration)
-      return () => clearTimeout(timer)
+    } else {
+      // モーダルが閉じられた時は、指定秒数後にクラッカーを停止
+      if (showConfetti) {
+        const duration = is100Percent ? 10000 : 3000
+        const timer = setTimeout(() => {
+          setShowConfetti(false)
+          setConfettiTimer(null)
+        }, duration)
+        setConfettiTimer(timer)
+      }
     }
-  }, [isOpen, is100Percent])
+
+    // クリーンアップ関数
+    return () => {
+      if (confettiTimer) {
+        clearTimeout(confettiTimer)
+        setConfettiTimer(null)
+      }
+    }
+  }, [isOpen, is100Percent, showConfetti])
 
   const getProgressMessage = (progress: number) => {
     if (progress >= 100) {
@@ -132,12 +151,79 @@ export function ProgressModal({
     return "🎉"
   }
 
+  // 進捗に応じたクラッカー演出の絵文字数を取得
+  const getConfettiCount = (progress: number) => {
+    if (progress >= 100) {
+      return 150 // 100%達成時は最大
+    } else if (progress >= 90) {
+      return 120
+    } else if (progress >= 80) {
+      return 100
+    } else if (progress >= 70) {
+      return 80
+    } else if (progress >= 60) {
+      return 70
+    } else if (progress >= 50) {
+      return 60
+    } else if (progress >= 40) {
+      return 50
+    } else if (progress >= 30) {
+      return 40
+    } else if (progress >= 20) {
+      return 35
+    } else if (progress >= 10) {
+      return 30
+    } else if (progress >= 5) {
+      return 25
+    } else {
+      return 20 // 1%達成時は最小
+    }
+  }
+
+  // 進捗に応じたクラッカー演出の絵文字サイズを取得
+  const getConfettiSize = (progress: number) => {
+    if (progress >= 100) {
+      return "text-5xl" // 100%達成時は最大
+    } else if (progress >= 80) {
+      return "text-4xl"
+    } else if (progress >= 60) {
+      return "text-3xl"
+    } else if (progress >= 40) {
+      return "text-2xl"
+    } else if (progress >= 20) {
+      return "text-xl"
+    } else {
+      return "text-lg" // 1%達成時は最小
+    }
+  }
+
+  // 進捗に応じたクラッカー演出の絵文字セットを取得
+  const getConfettiEmojis = (progress: number) => {
+    if (progress >= 100) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎', '🏆', '🔥', '⚡', '💖', '🌈', '🎆', '🎇', '💝', '🎁', '🎀', '🦄', '🌠']
+    } else if (progress >= 80) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎', '🏆', '🔥', '⚡', '💖', '🌈', '🎆']
+    } else if (progress >= 60) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎', '🏆', '🔥', '⚡', '💖']
+    } else if (progress >= 40) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎', '🏆', '🔥']
+    } else if (progress >= 20) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎']
+    } else if (progress >= 10) {
+      return ['🎉', '🎊', '✨', '⭐', '💫', '🌟']
+    } else if (progress >= 5) {
+      return ['🎉', '🎊', '✨', '⭐', '💫']
+    } else {
+      return ['🎉', '🎊', '✨', '⭐'] // 1%達成時は基本の4つ
+    }
+  }
+
   return (
     <>
       {/* クラッカー演出 */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
-          {[...Array(is100Percent ? 100 : 50)].map((_, i) => (
+          {[...Array(getConfettiCount(progress))].map((_, i) => (
             <div
               key={i}
               className="absolute animate-bounce"
@@ -148,11 +234,8 @@ export function ProgressModal({
                 animationDuration: `${2 + Math.random() * 2}s`,
               }}
             >
-              <span className={is100Percent ? "text-4xl" : "text-2xl"}>
-                {is100Percent 
-                  ? ['🎉', '🎊', '✨', '⭐', '💫', '🌟', '👑', '💎', '🏆', '🔥', '⚡', '💖'][Math.floor(Math.random() * 12)]
-                  : ['🎉', '🎊', '✨', '⭐', '💫', '🌟'][Math.floor(Math.random() * 6)]
-                }
+              <span className={getConfettiSize(progress)}>
+                {getConfettiEmojis(progress)[Math.floor(Math.random() * getConfettiEmojis(progress).length)]}
               </span>
             </div>
           ))}
