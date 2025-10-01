@@ -60,3 +60,22 @@ export function getRandomPokemon(
   const randomIndex = Math.floor(Math.random() * pokemonArray.length)
   return pokemonArray[randomIndex]
 }
+
+export function getPokemonByFirstChar(
+  pokemonMap: Map<string, PokemonData>,
+  firstChar: string,
+  usedNames: Set<string>,
+  dakutenMap: { [key: string]: string[] },
+): PokemonData | null {
+  const variants = dakutenMap[firstChar] || [firstChar]
+
+  const pokemonArray = Array.from(pokemonMap.values()).filter((pokemon) => {
+    if (usedNames.has(pokemon.name)) return false
+    const pokemonFirstChar = pokemon.name.charAt(0)
+    return variants.includes(pokemonFirstChar)
+  })
+
+  if (pokemonArray.length === 0) return null
+  const randomIndex = Math.floor(Math.random() * pokemonArray.length)
+  return pokemonArray[randomIndex]
+}

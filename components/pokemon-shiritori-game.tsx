@@ -13,8 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Sparkles, Zap, ArrowRight, RotateCcw, HelpCircle, Share2 } from "lucide-react"
-import { loadPokemonData, getRandomPokemon, type PokemonData } from "@/lib/pokemon-data"
+import { Sparkles, Zap, ArrowRight, RotateCcw, HelpCircle, Share2, Lightbulb } from "lucide-react"
+import { loadPokemonData, getRandomPokemon, getPokemonByFirstChar, type PokemonData } from "@/lib/pokemon-data"
 
 type Pokemon = {
   name: string
@@ -192,7 +192,14 @@ export function PokemonShiritoriGame() {
   const [nextChar, setNextChar] = useState("")
   const [isAnimating, setIsAnimating] = useState(false)
   const [showRules, setShowRules] = useState(true)
+  const [usedHint, setUsedHint] = useState(false)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
   const chainEndRef = useRef<HTMLDivElement>(null)
+
+  const [scoreKey, setScoreKey] = useState(0)
+  const [comboKey, setComboKey] = useState(0)
+  const [passesKey, setPassesKey] = useState(0)
+  const [showResultModal, setShowResultModal] = useState(false)
 
   useEffect(() => {
     const savedHighScore = localStorage.getItem(HIGH_SCORE_KEY)
@@ -326,18 +333,18 @@ export function PokemonShiritoriGame() {
   const handleSubmit = () => {
     if (!currentInput.trim() || isAnimating) return
 
+    setMessage("")
+
     const inputKatakana = hiraganaToKatakana(currentInput.trim())
 
     if (RESTRICTED_POKEMON.includes(inputKatakana)) {
       setMessage(`❌ ${inputKatakana}は使用できません（フォルム違いのため）`)
-      setTimeout(() => setMessage(""), 2000)
       return
     }
 
     const pokemonData = pokemonDatabase.get(inputKatakana)
     if (!pokemonData) {
       setMessage("❌ ポケモンが見つかりません")
-      setTimeout(() => setMessage(""), 2000)
       return
     }
 
@@ -358,6 +365,7 @@ export function PokemonShiritoriGame() {
         const newCombo = combo + 1
         points = newCombo
         setCombo(newCombo)
+        setComboKey((prev) => prev + 1)
         setMaxCombo(Math.max(maxCombo, newCombo))
       }
 
@@ -365,18 +373,21 @@ export function PokemonShiritoriGame() {
       setUsedNames((prev) => new Set([...prev, inputKatakana]))
       const finalScore = score + points + 10
       setScore(finalScore)
+      setScoreKey((prev) => prev + 1)
       saveHighScore(finalScore)
       setCurrentInput("")
       setGameState("cleared")
       setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt`)
+      setShowResultModal(true)
       return
     }
 
     if (usedNames.has(inputKatakana)) {
       setScore((prev) => Math.max(0, prev - 5))
+      setScoreKey((prev) => prev + 1)
       setMessage("❌ 同じポケモン使用！ -5pt")
       setCombo(0)
-      setTimeout(() => setMessage(""), 2000)
+      setComboKey((prev) => prev + 1)
       return
     }
 
@@ -384,7 +395,6 @@ export function PokemonShiritoriGame() {
       const variants = DAKUTEN_MAP[nextChar]
       const variantText = variants ? variants.map((v) => `「${v}」`).join(" または ") : `「${nextChar}」`
       setMessage(`❌ 次は${variantText}で始まるポケモンを入力してください`)
-      setTimeout(() => setMessage(""), 2000)
       return
     }
 
@@ -399,16 +409,19 @@ export function PokemonShiritoriGame() {
       const newCombo = combo + 1
       points = newCombo
       setCombo(newCombo)
+      setComboKey((prev) => prev + 1)
       setMaxCombo(Math.max(maxCombo, newCombo))
       setMessage(`✨ タイプ一致コンボ！ +${points}pt (${newCombo}連鎖)`)
     } else {
       setCombo(0)
-      setMessage(`+${points}pt`)
+      setComboKey((prev) => prev + 1)
+      setMessage(`正解！+${points}pt`)
     }
 
     setChain((prev) => [...prev, { type: "pokemon", pokemon: newPokemon }])
     setUsedNames((prev) => new Set([...prev, inputKatakana]))
     setScore((prev) => prev + points)
+    setScoreKey((prev) => prev + 1)
     setCurrentInput("")
 
     setIsAnimating(true)
@@ -423,22 +436,42 @@ export function PokemonShiritoriGame() {
     }
 
     setTimeout(() => {
-      setMessage("")
       setIsAnimating(false)
-    }, 2000)
+    }, 500)
   }
 
   const handlePass = () => {
     if (passesLeft > 0) {
+      setMessage("")
+
       const oldChar = nextChar
       const randomChar = getRandomChar()
       setNextChar(randomChar)
       setChain((prev) => [...prev, { type: "pass", fromChar: oldChar, toChar: randomChar }])
       setPassesLeft((prev) => prev - 1)
+      setPassesKey((prev) => prev + 1)
       setScore((prev) => Math.max(0, prev - 2))
+      setScoreKey((prev) => prev + 1)
       setCombo(0)
+      setComboKey((prev) => prev + 1)
       setMessage(`⏭️ チェンジ使用 -2pt 次は「${randomChar}」から`)
-      setTimeout(() => setMessage(""), 2000)
+    }
+  }
+
+  const handleHint = () => {
+    if (score < 1) return
+
+    setMessage("")
+
+    const hintPokemon = getPokemonByFirstChar(pokemonDatabase, nextChar, usedNames, DAKUTEN_MAP)
+
+    if (hintPokemon) {
+      setScore((prev) => prev - 1)
+      setScoreKey((prev) => prev + 1)
+      setUsedHint(true)
+      setMessage(`💡 ヒント: ${hintPokemon.name} -1pt`)
+    } else {
+      setMessage(`💡 ヒント: 該当するポケモンが見つかりません`)
     }
   }
 
@@ -473,13 +506,14 @@ export function PokemonShiritoriGame() {
     setGameState("playing")
     setMessage("")
     setIsAnimating(false)
+    setUsedHint(false)
   }
 
-  const handleShareToX = () => {
-    const pokemonCount = chain.filter((item) => item.type === "pokemon").length
-    const text = `ポケモンしりとりスコアアタック\n${startPokemon?.name} → ${goalPokemon?.name}\n\n${pokemonCount}匹つなげて ${score}pt 獲得！\n最大コンボ: ${maxCombo}連鎖\n\n#ポケモンしりとり`
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
-    window.open(url, "_blank")
+  const handleFinish = () => {
+    saveHighScore(score)
+    setGameState("finished")
+    setShowEndConfirm(false)
+    setShowResultModal(true)
   }
 
   function getCharVariants(char: string): string {
@@ -507,9 +541,16 @@ export function PokemonShiritoriGame() {
     return <span className="font-bold text-foreground text-base">「{char}」</span>
   }
 
-  const handleFinish = () => {
-    saveHighScore(score)
-    setGameState("finished")
+  const handleShareToX = () => {
+    const isCleared = gameState === "cleared"
+    const chainCount = chain.filter((item) => item.type === "pokemon").length
+    const changesUsed = 3 - passesLeft
+    const hintText = usedHint ? "ヒントあり" : "ヒントなし"
+
+    const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nhttps://v0.app`
+
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(twitterUrl, "_blank")
   }
 
   if (isLoading || !startPokemon || !goalPokemon) {
@@ -521,9 +562,9 @@ export function PokemonShiritoriGame() {
   }
 
   return (
-    <Card className="w-full max-w-2xl p-4 md:p-5 space-y-2">
-      <div className="text-center space-y-1 relative">
-        <h1 className="text-2xl md:text-3xl font-bold text-balance">🎮 ポケモンしりとり</h1>
+    <Card className="w-full max-w-2xl p-4 md:p-5 space-y-1.5">
+      <div className="text-center space-y-0.5 relative">
+        <h1 className="text-2xl md:text-3xl font-bold text-balance">🎮ポケしり🥹</h1>
         <p className="text-sm text-muted-foreground">スコアアタック</p>
         <Dialog open={showRules} onOpenChange={setShowRules}>
           <DialogTrigger asChild>
@@ -552,6 +593,7 @@ export function PokemonShiritoriGame() {
                       <li>ゴール到達：+10pt</li>
                       <li>任意チェンジ：-2pt（最大3回、コンボリセット）</li>
                       <li>重複使用：-5pt（コンボリセット）</li>
+                      <li>ヒント：-1pt（ポケモン名を1つ表示）</li>
                     </ul>
                   </div>
                   <div>
@@ -579,7 +621,7 @@ export function PokemonShiritoriGame() {
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 space-y-0.5">
           <p className="text-xs text-muted-foreground">スタート</p>
-          <div className="bg-primary/10 rounded-lg p-2 border-2 border-primary">
+          <div className="bg-primary/10 rounded-lg p-1.5 border-2 border-primary">
             <p className="font-bold text-sm text-primary">{startPokemon.name}</p>
             <div className="flex gap-1 mt-0.5">
               {startPokemon.types.map((type) => (
@@ -595,7 +637,7 @@ export function PokemonShiritoriGame() {
 
         <div className="flex-1 space-y-0.5">
           <p className="text-xs text-muted-foreground">ゴール</p>
-          <div className="bg-accent/10 rounded-lg p-2 border-2 border-accent">
+          <div className="bg-accent/10 rounded-lg p-1.5 border-2 border-accent">
             <p className="font-bold text-sm text-accent">{goalPokemon.name}</p>
             <div className="flex gap-1 mt-0.5">
               {goalPokemon.types.map((type) => (
@@ -609,31 +651,37 @@ export function PokemonShiritoriGame() {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-card rounded-lg p-2 border text-center">
-          <p className="text-xl font-bold text-primary">{score}</p>
+        <div className="bg-card rounded-lg p-1.5 border text-center">
+          <p key={scoreKey} className="text-xl font-bold text-primary animate-number-pop">
+            {score}
+          </p>
           <p className="text-xs text-muted-foreground">スコア</p>
           {highScore > 0 && <p className="text-xs text-muted-foreground mt-0.5">最高: {highScore}pt</p>}
         </div>
-        <div className="bg-card rounded-lg p-2 border text-center">
+        <div className="bg-card rounded-lg p-1.5 border text-center">
           <div className="flex items-center justify-center gap-1">
             <Zap className="w-4 h-4 text-secondary" />
-            <p className="text-xl font-bold text-secondary">{combo}</p>
+            <p key={comboKey} className="text-xl font-bold text-secondary animate-number-pop">
+              {combo}
+            </p>
             <span className="text-xs text-muted-foreground">/ {maxCombo}</span>
           </div>
           <p className="text-xs text-muted-foreground">タイプ一致コンボ</p>
         </div>
-        <div className="bg-card rounded-lg p-2 border text-center">
-          <p className="text-xl font-bold">{passesLeft}</p>
+        <div className="bg-card rounded-lg p-1.5 border text-center">
+          <p key={passesKey} className="text-xl font-bold animate-number-pop">
+            {passesLeft}
+          </p>
           <p className="text-xs text-muted-foreground">チェンジ残</p>
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <p className="text-sm font-medium flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" />
           しりとりチェーン ({chain.filter((item) => item.type === "pokemon").length}匹)
         </p>
-        <div className="bg-muted rounded-lg p-2.5 max-h-32 overflow-y-auto space-y-1.5">
+        <div className="bg-muted rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
           {chain.map((item, index) => {
             if (item.type === "pokemon") {
               const pokemonIndex = chain.slice(0, index + 1).filter((i) => i.type === "pokemon").length
@@ -669,8 +717,8 @@ export function PokemonShiritoriGame() {
       </div>
 
       {gameState === "playing" ? (
-        <div className="space-y-2">
-          <div className="space-y-1.5">
+        <div className="space-y-1.5">
+          <div className="space-y-1">
             <p className="text-sm text-muted-foreground">次は{renderCharVariants(nextChar)}で始まるポケモン</p>
             <div className="flex gap-2">
               <Input
@@ -695,6 +743,16 @@ export function PokemonShiritoriGame() {
 
           <div className="flex gap-2">
             <Button
+              onClick={handleHint}
+              disabled={score < 1 || isAnimating}
+              variant="outline"
+              size="sm"
+              className="flex-1 bg-transparent h-8"
+            >
+              <Lightbulb className="w-3.5 h-3.5 mr-1" />
+              ヒント (-1pt)
+            </Button>
+            <Button
               onClick={handlePass}
               disabled={passesLeft === 0 || isAnimating}
               variant="outline"
@@ -703,63 +761,92 @@ export function PokemonShiritoriGame() {
             >
               チェンジ (-2pt)
             </Button>
-            <Button
-              onClick={handleFinish}
-              variant="outline"
-              size="sm"
-              className="flex-1 h-8 bg-transparent"
-              disabled={isAnimating}
-            >
-              終了
-            </Button>
+            <Dialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-1 h-8 bg-transparent" disabled={isAnimating}>
+                  終了
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>ゲームを終了しますか？</DialogTitle>
+                  <DialogDescription>現在のスコア: {score}pt</DialogDescription>
+                </DialogHeader>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setShowEndConfirm(false)}>
+                    キャンセル
+                  </Button>
+                  <Button className="flex-1" onClick={handleFinish}>
+                    終了する
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
-      ) : gameState === "cleared" ? (
-        <div className="space-y-4 text-center py-4">
-          <div className="space-y-1.5">
-            <p className="text-4xl font-bold text-primary animate-in zoom-in">🎉 クリア！ 🎉</p>
-            <p className="text-5xl font-bold text-primary animate-in zoom-in">{score}pt</p>
-            <p className="text-sm text-muted-foreground">
-              {chain.filter((item) => item.type === "pokemon").length}匹つなげました
-            </p>
-            <p className="text-sm text-muted-foreground">最大コンボ: {maxCombo}連鎖</p>
-            <p className="text-xs text-muted-foreground">
-              {startPokemon.name} → {goalPokemon.name}
-            </p>
-            {score > highScore && highScore > 0 && (
-              <p className="text-sm font-bold text-secondary">🎊 最高記録更新！ 🎊</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Button onClick={handleShareToX} size="sm" className="w-full" variant="default">
-              <Share2 className="w-4 h-4 mr-2" />
-              Xに投稿しよう
-            </Button>
-            <Button onClick={handleReset} size="sm" className="w-full bg-transparent" variant="outline">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              もう一度プレイ
-            </Button>
-          </div>
-        </div>
-      ) : gameState === "finished" ? (
-        <div className="space-y-3 text-center">
-          <div className="space-y-1.5">
-            <p className="text-xl font-bold">ゲーム終了！</p>
-            <p className="text-3xl font-bold text-primary">{score}pt</p>
-            <p className="text-sm text-muted-foreground">
-              {chain.filter((item) => item.type === "pokemon").length}匹つなげました
-            </p>
-            <p className="text-sm text-muted-foreground">最大コンボ: {maxCombo}連鎖</p>
-            {score > highScore && highScore > 0 && (
-              <p className="text-sm font-bold text-secondary">🎊 最高記録更新！ 🎊</p>
-            )}
-          </div>
-          <Button onClick={handleReset} size="sm" className="w-full">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            もう一度プレイ
-          </Button>
         </div>
       ) : null}
+
+      <Dialog open={showResultModal} onOpenChange={setShowResultModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">
+              {gameState === "cleared" ? "🎉 クリア！ 🎉" : "ゲーム終了"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-center space-y-2">
+              <p className="text-5xl font-bold text-primary">{score}pt</p>
+              {score > highScore && highScore > 0 && (
+                <p className="text-sm font-bold text-secondary">🎊 最高記録更新！ 🎊</p>
+              )}
+            </div>
+
+            <div className="space-y-2 bg-muted rounded-lg p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">つないだ数</span>
+                <span className="text-lg font-bold">{chain.filter((item) => item.type === "pokemon").length}匹</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">最大コンボ</span>
+                <span className="text-lg font-bold">{maxCombo}連鎖</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">チェンジ使用</span>
+                <span className="text-lg font-bold">{3 - passesLeft}回</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">ヒント</span>
+                <span className="text-lg font-bold">{usedHint ? "使用" : "未使用"}</span>
+              </div>
+            </div>
+
+            {!usedHint && <p className="text-center text-sm font-bold text-secondary">✨ ヒントなしでクリア！ ✨</p>}
+
+            <div className="text-center text-xs text-muted-foreground">
+              {startPokemon.name} → {goalPokemon.name}
+            </div>
+
+            <div className="space-y-2">
+              <Button onClick={handleShareToX} size="sm" className="w-full bg-black hover:bg-black/90 text-white">
+                <Share2 className="w-4 h-4 mr-2" />
+                Xに投稿しよう
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowResultModal(false)
+                  handleReset()
+                }}
+                size="sm"
+                className="w-full bg-transparent"
+                variant="outline"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                もう一度プレイ
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
