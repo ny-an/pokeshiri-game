@@ -6,11 +6,9 @@ export type PokemonData = {
 }
 
 export async function loadPokemonData(): Promise<Map<string, PokemonData>> {
-  const CSV_URL =
-    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pokemon-data_v2-ERSzI2cgqJxe4gIRkCtrwFDvM3FkUU.csv"
-
   try {
-    const response = await fetch(CSV_URL)
+    // ローカルのCSVファイルを読み込み
+    const response = await fetch('/data/pokemon-list.csv')
     const csvText = await response.text()
 
     const lines = csvText.split("\n")
