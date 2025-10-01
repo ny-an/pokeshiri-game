@@ -76,10 +76,50 @@ export function PokemonShiritoriGame() {
   const [newPokemonName, setNewPokemonName] = useState<string>("")
   const [previousProgress, setPreviousProgress] = useState(0)
   const [lastShownMilestone, setLastShownMilestone] = useState(0)
+  const [debugMode, setDebugMode] = useState(false)
+
+  // デバッグモードの有効化（隠しコマンド）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // ハッキング警告メッセージを表示
+      console.log("🚫 はっきんぐしないで！！")
+      console.log("このゲームは楽しくプレイしてください 🎮")
+      
+      let konamiCode: string[] = []
+      const konamiSequence = [
+        'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+        'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+        'KeyB', 'KeyA'
+      ]
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        konamiCode.push(event.code)
+        if (konamiCode.length > konamiSequence.length) {
+          konamiCode.shift()
+        }
+        
+        if (konamiCode.join(',') === konamiSequence.join(',')) {
+          setDebugMode(true)
+          console.log("🎮 デバッグモードが有効になりました！")
+          console.log("=== ポケしり デバッグコマンド ===")
+          console.log("showProgressModal(milestone) - 指定したマイルストーンの進捗モーダルを表示")
+          console.log("resetProgressMilestone() - 進捗マイルストーンをリセット")
+          console.log("showProgressStatus() - 現在の進捗状況を表示")
+          console.log("test100Percent() - 100%達成演出をテスト表示")
+          console.log("disableDebugMode() - デバッグモードを無効化")
+          console.log("=====================================")
+          konamiCode = []
+        }
+      }
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   // デバッグ用のコンソールコマンドを追加
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && debugMode) {
       // 進捗モーダルを手動で表示するコマンド
       (window as any).showProgressModal = (milestone: number) => {
         setProgressMilestone(milestone)
@@ -120,15 +160,25 @@ export function PokemonShiritoriGame() {
         console.log("100%達成演出をテスト表示しました")
       }
 
-      // 利用可能なコマンドを表示
-      console.log("=== ポケしり デバッグコマンド ===")
-      console.log("showProgressModal(milestone) - 指定したマイルストーンの進捗モーダルを表示")
-      console.log("resetProgressMilestone() - 進捗マイルストーンをリセット")
-      console.log("showProgressStatus() - 現在の進捗状況を表示")
-      console.log("test100Percent() - 100%達成演出をテスト表示")
-      console.log("=====================================")
+      // デバッグモードを無効化するコマンド
+      (window as any).disableDebugMode = () => {
+        setDebugMode(false)
+        delete (window as any).showProgressModal
+        delete (window as any).resetProgressMilestone
+        delete (window as any).showProgressStatus
+        delete (window as any).test100Percent
+        delete (window as any).disableDebugMode
+        console.log("🔒 デバッグモードが無効になりました")
+      }
+    } else if (typeof window !== 'undefined' && !debugMode) {
+      // デバッグモードが無効の時はコマンドを削除
+      delete (window as any).showProgressModal
+      delete (window as any).resetProgressMilestone
+      delete (window as any).showProgressStatus
+      delete (window as any).test100Percent
+      delete (window as any).disableDebugMode
     }
-  }, [pokemonDatabase, pokemonHistory, lastShownMilestone])
+  }, [pokemonDatabase, pokemonHistory, lastShownMilestone, debugMode])
 
   useEffect(() => {
     const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
