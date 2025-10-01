@@ -26,6 +26,7 @@ import {
   trackPokemonAnswer,
   trackGameClear,
   trackGameOver,
+  checkProgressMilestone,
 } from "@/lib/game-utils"
 import type { Pokemon, ChainItem, GameState } from "@/lib/types"
 import { GameHeader } from "./game-header"
@@ -33,6 +34,7 @@ import { ScoreDisplay } from "./score-display"
 import { ChainDisplay } from "./chain-display"
 import { GameInput } from "./game-input"
 import { ResultModal } from "./result-modal"
+import { ProgressModal } from "./progress-modal"
 
 
 export function PokemonShiritoriGame() {
@@ -68,6 +70,10 @@ export function PokemonShiritoriGame() {
   const [pokemonHistory, setPokemonHistory] = useState<{ [name: string]: number }>({})
   const [showPokedex, setShowPokedex] = useState(false)
   const [showDeveloperInfo, setShowDeveloperInfo] = useState(false)
+  const [showProgressModal, setShowProgressModal] = useState(false)
+  const [progressMilestone, setProgressMilestone] = useState<number | null>(null)
+  const [newPokemonName, setNewPokemonName] = useState<string>("")
+  const [previousProgress, setPreviousProgress] = useState(0)
 
   useEffect(() => {
     const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
@@ -285,7 +291,27 @@ export function PokemonShiritoriGame() {
 
     setChain((prev: ChainItem[]) => [...prev, { type: "pokemon", pokemon: newPokemon, points }])
     setUsedNames((prev: Set<string>) => new Set([...prev, inputKatakana]))
-    setPokemonHistory(savePokemonHistory(inputKatakana, pokemonHistory))
+    
+    // 図鑑進捗をチェック
+    const newHistory = savePokemonHistory(inputKatakana, pokemonHistory)
+    setPokemonHistory(newHistory)
+    
+    // 進捗を計算
+    const allPokemon = getAllPokemonSorted(pokemonDatabase)
+    const newCaughtCount = Object.keys(newHistory).length
+    const displayCaughtCount = newCaughtCount + RESTRICTED_POKEMON.length
+    const totalCount = allPokemon.length
+    const currentProgress = totalCount > 0 ? (displayCaughtCount / totalCount) * 100 : 0
+    
+    // マイルストーンをチェック
+    const milestone = checkProgressMilestone(currentProgress, previousProgress)
+    if (milestone !== null) {
+      setProgressMilestone(milestone)
+      setNewPokemonName(inputKatakana)
+      setShowProgressModal(true)
+    }
+    setPreviousProgress(currentProgress)
+    
   setScore((prev: number) => prev + points)
   setScoreKey((prev: number) => prev + 1)
   setCurrentInput("")
@@ -571,6 +597,15 @@ export function PokemonShiritoriGame() {
           goalPokemon={goalPokemon}
           handleShareToX={handleShareToX}
           handleReset={handleReset}
+        />
+
+        <ProgressModal
+          isOpen={showProgressModal}
+          onClose={() => setShowProgressModal(false)}
+          progress={progressMilestone || 0}
+          caughtCount={displayCaughtCount}
+          totalCount={totalCount}
+          newPokemon={newPokemonName}
         />
       </Card>
     </div>

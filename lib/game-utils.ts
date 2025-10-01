@@ -141,3 +141,22 @@ export function trackGameOver() {
     window.gtag('event', 'game_over')
   }
 }
+
+// 図鑑進捗のマイルストーンをチェックする関数
+export function checkProgressMilestone(currentProgress: number, previousProgress: number): number | null {
+  // 最初は1%超えたら表示
+  if (previousProgress <= 1 && currentProgress > 1) {
+    return 1
+  }
+  
+  // その後は5%刻みで表示
+  const milestones = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+  
+  for (const milestone of milestones) {
+    if (previousProgress < milestone && currentProgress >= milestone) {
+      return milestone
+    }
+  }
+  
+  return null
+}
