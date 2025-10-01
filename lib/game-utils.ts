@@ -122,3 +122,22 @@ export function getComboBackgroundColor(combo: number, comboType: string | null)
 export function getMaskedName(name: string): string {
   return "○".repeat(name.length)
 }
+
+// Gtagイベント送信関数
+export function trackPokemonAnswer() {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'pokemon_answer')
+  }
+}
+
+export function trackGameClear() {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'game_clear')
+  }
+}
+
+export function trackGameOver() {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'game_over')
+  }
+}

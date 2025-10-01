@@ -10,3 +10,16 @@ export type ChainItem =
   | { type: "hint"; pokemon: Pokemon; points: number }
 
 export type GameState = "playing" | "finished" | "cleared"
+
+// Gtag用の型定義
+declare global {
+  interface Window {
+    gtag: (
+      command: 'config' | 'event' | 'js' | 'set',
+      targetId: string | Date,
+      config?: {
+        [key: string]: any
+      }
+    ) => void
+  }
+}

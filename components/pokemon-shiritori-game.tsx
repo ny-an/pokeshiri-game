@@ -23,6 +23,9 @@ import {
   getTypeEmoji,
   getComboBackgroundColor,
   getMaskedName,
+  trackPokemonAnswer,
+  trackGameClear,
+  trackGameOver,
 } from "@/lib/game-utils"
 import type { Pokemon, ChainItem, GameState } from "@/lib/types"
 import { GameHeader } from "./game-header"
@@ -149,6 +152,10 @@ export function PokemonShiritoriGame() {
       setHighScore(saveHighScore(score, highScore))
       setGameState("finished")
       setShowEndConfirm(false)
+      
+      // ゲームオーバーのトラッキング
+      trackGameOver()
+      
       setShowResultModal(true)
     }
   }, [gameState, nextChar, usedNames, pokemonDatabase, score, highScore])
@@ -206,11 +213,15 @@ export function PokemonShiritoriGame() {
       setScore(finalScore)
       setScoreKey((prev: number) => prev + 1)
       setHighScore(saveHighScore(finalScore, highScore))
-      setCurrentInput("")
-      setGameState("cleared")
-      setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt`)
-      setShowResultModal(true)
-      return
+    setCurrentInput("")
+    setGameState("cleared")
+    setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt`)
+    
+    // ゲームクリアのトラッキング
+    trackGameClear()
+    
+    setShowResultModal(true)
+    return
     }
 
     if (usedNames.has(inputKatakana)) {
@@ -275,11 +286,14 @@ export function PokemonShiritoriGame() {
     setChain((prev: ChainItem[]) => [...prev, { type: "pokemon", pokemon: newPokemon, points }])
     setUsedNames((prev: Set<string>) => new Set([...prev, inputKatakana]))
     setPokemonHistory(savePokemonHistory(inputKatakana, pokemonHistory))
-    setScore((prev: number) => prev + points)
-    setScoreKey((prev: number) => prev + 1)
-    setCurrentInput("")
+  setScore((prev: number) => prev + points)
+  setScoreKey((prev: number) => prev + 1)
+  setCurrentInput("")
 
-    setIsAnimating(true)
+  // ポケモン回答のトラッキング
+  trackPokemonAnswer()
+
+  setIsAnimating(true)
 
     const lastChar = getLastChar(inputKatakana)
     if (lastChar === "ン") {
@@ -337,6 +351,10 @@ export function PokemonShiritoriGame() {
       setHighScore(saveHighScore(score, highScore))
       setGameState("finished")
       setShowEndConfirm(false)
+      
+      // ゲームオーバーのトラッキング
+      trackGameOver()
+      
       setShowResultModal(true)
     }
   }
@@ -379,6 +397,10 @@ export function PokemonShiritoriGame() {
     setHighScore(saveHighScore(score, highScore))
     setGameState("finished")
     setShowEndConfirm(false)
+    
+    // ゲームオーバーのトラッキング
+    trackGameOver()
+    
     setShowResultModal(true)
   }
 
