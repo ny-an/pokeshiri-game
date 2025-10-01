@@ -79,3 +79,11 @@ export function getPokemonByFirstChar(
   const randomIndex = Math.floor(Math.random() * pokemonArray.length)
   return pokemonArray[randomIndex]
 }
+
+export function getAllPokemonSorted(pokemonMap: Map<string, PokemonData>): PokemonData[] {
+  return Array.from(pokemonMap.values()).sort((a, b) => {
+    const numA = Number.parseInt(a.number, 10)
+    const numB = Number.parseInt(b.number, 10)
+    return numA - numB
+  })
+}
