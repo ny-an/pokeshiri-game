@@ -454,7 +454,7 @@ export function PokemonShiritoriGame() {
 
         <ChainDisplay chain={chain} chainEndRef={chainEndRef} />
 
-        {gameState === "playing" ? (
+        {!showResultModal ? (
           <GameInput
             currentInput={currentInput}
             setCurrentInput={setCurrentInput}
