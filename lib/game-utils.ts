@@ -110,16 +110,11 @@ export function getTypeEmoji(types: string[]): string {
   return "✨"
 }
 
-export function getComboBackgroundColor(combo: number, chain: ChainItem[]): string {
-  if (combo === 0) return "bg-background"
+export function getComboBackgroundColor(combo: number, comboType: string | null): string {
+  if (combo === 0 || !comboType) return "bg-background"
 
-  const lastPokemon = getLastPokemon(chain)
-  if (!lastPokemon) return "bg-background"
-
-  for (const type of lastPokemon.types) {
-    if (TYPE_BG_COLORS[type]) {
-      return TYPE_BG_COLORS[type]
-    }
+  if (TYPE_BG_COLORS[comboType]) {
+    return TYPE_BG_COLORS[comboType]
   }
   return "bg-background"
 }

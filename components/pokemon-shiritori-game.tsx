@@ -46,6 +46,7 @@ export function PokemonShiritoriGame() {
   const [combo, setCombo] = useState(0)
   const [maxCombo, setMaxCombo] = useState(0)
   const [passesLeft, setPassesLeft] = useState(3)
+  const [comboType, setComboType] = useState<string | null>(null)
   const [message, setMessage] = useState("")
   const [usedNames, setUsedNames] = useState<Set<string>>(new Set())
   const [nextChar, setNextChar] = useState("")
@@ -222,6 +223,7 @@ export function PokemonShiritoriGame() {
       setScoreKey((prev: number) => prev + 1)
       setMessage("❌ 同じポケモン使用！ -5pt")
       setCombo(0)
+      setComboType(null)
       setComboKey((prev: number) => prev + 1)
       setCurrentInput("")
 
@@ -254,10 +256,18 @@ export function PokemonShiritoriGame() {
       setCombo(newCombo)
       setComboKey((prev: number) => prev + 1)
       setMaxCombo(Math.max(maxCombo, newCombo))
+      
+      // 一致したタイプを特定して保存
+      const matchedType = lastPokemon.types.find(type => newPokemon.types.includes(type))
+      if (matchedType) {
+        setComboType(matchedType)
+      }
+      
       const typeEmoji = getTypeEmoji(newPokemon.types)
       setMessage(`${typeEmoji} タイプ一致コンボ！ +${points}pt (コンボ×${newCombo})`)
     } else {
       setCombo(0)
+      setComboType(null)
       setComboKey((prev: number) => prev + 1)
       setMessage(`正解！+${points}pt`)
     }
@@ -316,6 +326,11 @@ export function PokemonShiritoriGame() {
       setScore((prev: number) => prev - 1)
       setScoreKey((prev: number) => prev + 1)
       setUsedHint(true)
+      const pokemon: Pokemon = {
+        name: hintPokemon.name,
+        types: hintPokemon.type2 ? [hintPokemon.type1, hintPokemon.type2] : [hintPokemon.type1],
+      }
+      setChain((prev: ChainItem[]) => [...prev, { type: "hint", pokemon, points: -1 }])
       setMessage(`💡 ヒント: ${hintPokemon.name} -1pt`)
     } else {
       setMessage(`💡 ヒント: 該当するポケモンが見つかりません。ゲームオーバー`)
@@ -466,7 +481,7 @@ export function PokemonShiritoriGame() {
 
   return (
     <div
-      className={`fixed inset-0 overflow-auto flex items-center justify-center p-4 transition-colors duration-500 ${getComboBackgroundColor(combo, chain)}`}
+      className={`fixed inset-0 overflow-auto flex items-center justify-center p-4 transition-colors duration-500 ${getComboBackgroundColor(combo, comboType)}`}
     >
       <Card className="w-full max-w-2xl p-4 md:p-5 space-y-1.5">
         <GameHeader

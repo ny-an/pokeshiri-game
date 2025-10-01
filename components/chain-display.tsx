@@ -45,6 +45,18 @@ export function ChainDisplay({ chain, chainEndRef }: ChainDisplayProps) {
                 <span className="text-xs text-destructive font-semibold">{item.points}pt</span>
               </div>
             )
+          } else if (item.type === "hint") {
+            return (
+              <div
+                key={index}
+                className="flex items-center gap-2 text-sm text-amber-600 animate-in fade-in slide-in-from-left"
+              >
+                <span className="text-xs">💡</span>
+                <span className="font-medium">{item.pokemon.name}</span>
+                <span className="text-xs">(ヒント)</span>
+                <span className="text-xs font-semibold">{item.points}pt</span>
+              </div>
+            )
           } else {
             return (
               <div
