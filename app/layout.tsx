@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
+import PWARegistration from '@/components/pwa-registration'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -53,6 +54,28 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/pokeshiri-game/manifest.json',
+  themeColor: '#3b82f6',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ポケモンしりとりゲーム',
+  },
+  icons: {
+    icon: [
+      { url: '/pokeshiri-game/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/pokeshiri-game/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/pokeshiri-game/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 }
 
 export default function RootLayout({
@@ -64,6 +87,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
+        <PWARegistration />
         <Analytics />
       </body>
     </html>
