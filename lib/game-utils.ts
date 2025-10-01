@@ -160,3 +160,17 @@ export function checkProgressMilestone(currentProgress: number, previousProgress
   
   return null
 }
+
+// 表示すべき次のマイルストーンを取得する関数
+export function getNextMilestoneToShow(currentProgress: number, lastShownMilestone: number): number | null {
+  const milestones = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+  
+  // 現在の進捗に達している次の未表示のマイルストーンを探す
+  for (const milestone of milestones) {
+    if (milestone > lastShownMilestone && currentProgress >= milestone) {
+      return milestone
+    }
+  }
+  
+  return null
+}

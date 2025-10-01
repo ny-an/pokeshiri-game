@@ -27,6 +27,7 @@ import {
   trackGameClear,
   trackGameOver,
   checkProgressMilestone,
+  getNextMilestoneToShow,
 } from "@/lib/game-utils"
 import type { Pokemon, ChainItem, GameState } from "@/lib/types"
 import { GameHeader } from "./game-header"
@@ -74,10 +75,65 @@ export function PokemonShiritoriGame() {
   const [progressMilestone, setProgressMilestone] = useState<number | null>(null)
   const [newPokemonName, setNewPokemonName] = useState<string>("")
   const [previousProgress, setPreviousProgress] = useState(0)
+  const [lastShownMilestone, setLastShownMilestone] = useState(0)
+
+  // デバッグ用のコンソールコマンドを追加
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 進捗モーダルを手動で表示するコマンド
+      (window as any).showProgressModal = (milestone: number) => {
+        setProgressMilestone(milestone)
+        setNewPokemonName("テストポケモン")
+        setShowProgressModal(true)
+        console.log(`${milestone}%の進捗モーダルを表示しました`)
+      }
+
+      // 最後に表示したマイルストーンをリセットするコマンド
+      (window as any).resetProgressMilestone = () => {
+        setLastShownMilestone(0)
+        localStorage.setItem("pokemon-shiritori-last-shown-milestone", "0")
+        console.log("進捗マイルストーンをリセットしました")
+      }
+
+      // 現在の進捗状況を表示するコマンド
+      (window as any).showProgressStatus = () => {
+        const allPokemon = getAllPokemonSorted(pokemonDatabase)
+        const caughtCount = Object.keys(pokemonHistory).length
+        const displayCaughtCount = caughtCount + RESTRICTED_POKEMON.length
+        const totalCount = allPokemon.length
+        const currentProgress = totalCount > 0 ? (displayCaughtCount / totalCount) * 100 : 0
+        
+        console.log("=== 進捗状況 ===")
+        console.log(`現在の進捗: ${currentProgress.toFixed(1)}%`)
+        console.log(`捕獲数: ${caughtCount}匹`)
+        console.log(`表示用捕獲数: ${displayCaughtCount}匹`)
+        console.log(`総数: ${totalCount}匹`)
+        console.log(`最後に表示したマイルストーン: ${lastShownMilestone}%`)
+        console.log("==================")
+      }
+
+      // 100%達成演出をテストするコマンド
+      (window as any).test100Percent = () => {
+        setProgressMilestone(100)
+        setNewPokemonName("アルセウス")
+        setShowProgressModal(true)
+        console.log("100%達成演出をテスト表示しました")
+      }
+
+      // 利用可能なコマンドを表示
+      console.log("=== ポケしり デバッグコマンド ===")
+      console.log("showProgressModal(milestone) - 指定したマイルストーンの進捗モーダルを表示")
+      console.log("resetProgressMilestone() - 進捗マイルストーンをリセット")
+      console.log("showProgressStatus() - 現在の進捗状況を表示")
+      console.log("test100Percent() - 100%達成演出をテスト表示")
+      console.log("=====================================")
+    }
+  }, [pokemonDatabase, pokemonHistory, lastShownMilestone])
 
   useEffect(() => {
     const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
     const HISTORY_KEY = "pokemon-shiritori-history"
+    const LAST_SHOWN_MILESTONE_KEY = "pokemon-shiritori-last-shown-milestone"
     
     const savedHighScore = localStorage.getItem(HIGH_SCORE_KEY)
     if (savedHighScore) {
@@ -91,6 +147,11 @@ export function PokemonShiritoriGame() {
       } catch (error) {
         console.error("[v0] Failed to load Pokemon history:", error)
       }
+    }
+
+    const savedLastShownMilestone = localStorage.getItem(LAST_SHOWN_MILESTONE_KEY)
+    if (savedLastShownMilestone) {
+      setLastShownMilestone(Number.parseInt(savedLastShownMilestone, 10))
     }
   }, [])
 
@@ -303,12 +364,15 @@ export function PokemonShiritoriGame() {
     const totalCount = allPokemon.length
     const currentProgress = totalCount > 0 ? (displayCaughtCount / totalCount) * 100 : 0
     
-    // マイルストーンをチェック
-    const milestone = checkProgressMilestone(currentProgress, previousProgress)
-    if (milestone !== null) {
-      setProgressMilestone(milestone)
+    // マイルストーンをチェック（順番に表示）
+    const nextMilestone = getNextMilestoneToShow(currentProgress, lastShownMilestone)
+    if (nextMilestone !== null) {
+      setProgressMilestone(nextMilestone)
       setNewPokemonName(inputKatakana)
       setShowProgressModal(true)
+      setLastShownMilestone(nextMilestone)
+      // 最後に表示したマイルストーンを保存
+      localStorage.setItem("pokemon-shiritori-last-shown-milestone", nextMilestone.toString())
     }
     setPreviousProgress(currentProgress)
     
@@ -606,6 +670,7 @@ export function PokemonShiritoriGame() {
           caughtCount={displayCaughtCount}
           totalCount={totalCount}
           newPokemon={newPokemonName}
+          is100Percent={progressMilestone === 100}
         />
       </Card>
     </div>
