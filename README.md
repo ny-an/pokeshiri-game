@@ -1,30 +1,73 @@
-# Pokemon Shiritori game
+# ポケモンしりとりゲーム
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+ポケモンの名前を使ったしりとりゲームです。Next.jsとTypeScriptで構築されています。
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/nyama-nerukos-projects/v0-pokemon-shiritori-game)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/U69LVTR9PZi)
+## 概要
 
-## Overview
+このゲームは、ポケモンの名前を使ってしりとりを楽しむWebアプリケーションです。プレイヤーは順番にポケモンの名前を入力し、前のポケモン名の最後の文字で始まるポケモン名を答えます。
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## 機能
 
-## Deployment
+- ポケモン名によるしりとりゲーム
+- スコア表示
+- ゲーム履歴の表示
+- レスポンシブデザイン
+- PWA対応
 
-Your project is live at:
+## 技術スタック
 
-**[https://vercel.com/nyama-nerukos-projects/v0-pokemon-shiritori-game](https://vercel.com/nyama-nerukos-projects/v0-pokemon-shiritori-game)**
+- **フレームワーク**: Next.js 14
+- **言語**: TypeScript
+- **スタイリング**: Tailwind CSS
+- **UIコンポーネント**: shadcn/ui
+- **PWA**: Service Worker
 
-## Build your app
+## セットアップ
 
-Continue building your app on:
+### 必要な環境
 
-**[https://v0.app/chat/projects/U69LVTR9PZi](https://v0.app/chat/projects/U69LVTR9PZi)**
+- Node.js 18以上
+- npm または pnpm
 
-## How It Works
+### インストール
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```bash
+# 依存関係のインストール
+npm install
+# または
+pnpm install
+```
+
+### 開発サーバーの起動
+
+```bash
+npm run dev
+# または
+pnpm dev
+```
+
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてアプリケーションを確認できます。
+
+## ビルド
+
+```bash
+npm run build
+# または
+pnpm build
+```
+
+## プロジェクト構造
+
+```
+├── app/                    # Next.js App Router
+├── components/             # Reactコンポーネント
+│   ├── ui/                # UIコンポーネント
+│   └── ...                # ゲーム関連コンポーネント
+├── lib/                   # ユーティリティとデータ
+├── public/                # 静的ファイル
+└── styles/                # スタイルファイル
+```
+
+## ライセンス
+
+MIT License
