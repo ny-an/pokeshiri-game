@@ -391,24 +391,13 @@ export function PokemonShiritoriGame() {
     return canvas.toDataURL('image/png')
   }
 
-  const handleShareToX = async () => {
+  const handleShareToX = () => {
     const isCleared = gameState === "cleared"
     const chainCount = chain.filter((item: ChainItem) => item.type === "pokemon").length
     const changesUsed = 3 - passesLeft
     const hintText = usedHint ? "ヒントあり" : "ヒントなし"
 
     const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"}\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\nhttps://ny-an.github.io/pokeshiri-game/`
-
-    // サムネイルを生成
-    const thumbnailDataUrl = await generateThumbnail()
-    
-    // サムネイルをダウンロード可能にする
-    const link = document.createElement('a')
-    link.download = `pokemon-shiritori-${score}pt.png`
-    link.href = thumbnailDataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
 
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
     window.open(twitterUrl, "_blank")
