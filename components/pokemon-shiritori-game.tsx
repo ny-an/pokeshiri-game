@@ -303,7 +303,11 @@ export function PokemonShiritoriGame() {
       setUsedHint(true)
       setMessage(`💡 ヒント: ${hintPokemon.name} -1pt`)
     } else {
-      setMessage(`💡 ヒント: 該当するポケモンが見つかりません`)
+      setMessage(`💡 ヒント: 該当するポケモンが見つかりません。ゲームオーバー`)
+      setHighScore(saveHighScore(score, highScore))
+      setGameState("finished")
+      setShowEndConfirm(false)
+      setShowResultModal(true)
     }
   }
 
