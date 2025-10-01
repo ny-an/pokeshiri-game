@@ -137,6 +137,21 @@ export function PokemonShiritoriGame() {
     }
   }, [chain])
 
+  // 候補が存在しない場合は自動的にゲームオーバー
+  useEffect(() => {
+    if (gameState !== "playing") return
+    if (!nextChar) return
+
+    const candidate = getPokemonByFirstChar(pokemonDatabase, nextChar, usedNames, DAKUTEN_MAP)
+    if (!candidate) {
+      setMessage("💥 出せるポケモンがありません。ゲームオーバー")
+      setHighScore(saveHighScore(score, highScore))
+      setGameState("finished")
+      setShowEndConfirm(false)
+      setShowResultModal(true)
+    }
+  }, [gameState, nextChar, usedNames, pokemonDatabase, score, highScore])
+
   const getRandomChar = () => {
     const randomIndex = Math.floor(Math.random() * KATAKANA_LIST.length)
     return KATAKANA_LIST[randomIndex]
