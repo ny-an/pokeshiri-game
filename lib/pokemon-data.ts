@@ -8,7 +8,8 @@ export type PokemonData = {
 export async function loadPokemonData(): Promise<Map<string, PokemonData>> {
   try {
     // ローカルのCSVファイルを読み込み
-    const response = await fetch('/data/pokemon-list.csv')
+    const basePath = process.env.NODE_ENV === 'production' ? '/pokeshiri-game' : ''
+    const response = await fetch(`${basePath}/data/pokemon-list.csv`)
     const csvText = await response.text()
 
     const lines = csvText.split("\n")
