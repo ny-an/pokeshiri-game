@@ -83,7 +83,6 @@ export function PokemonShiritoriGame() {
     if (typeof window !== 'undefined') {
       // ハッキング警告メッセージを表示
       console.log("🚫 はっきんぐしないで！！")
-      console.log("このゲームは楽しくプレイしてください 🎮")
       
       let konamiCode: string[] = []
       const konamiSequence = [
