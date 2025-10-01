@@ -72,15 +72,15 @@ export function GameInput({
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 sm:gap-2">
         <Button
           onClick={handleHint}
           disabled={score < 1 || isAnimating}
           variant="outline"
           size="sm"
-          className="flex-1 bg-transparent h-8"
+          className="flex-1 bg-transparent h-8 text-xs sm:text-sm"
         >
-          <Lightbulb className="w-3.5 h-3.5 mr-1" />
+          <Lightbulb className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" />
           ヒント (-1pt)
         </Button>
         <Button
@@ -88,14 +88,14 @@ export function GameInput({
           disabled={passesLeft === 0 || isAnimating}
           variant="outline"
           size="sm"
-          className="flex-1 bg-transparent h-8"
+          className="flex-1 bg-transparent h-8 text-xs sm:text-sm"
         >
-          <RotateCcw className="w-3.5 h-3.5 mr-1" />
+          <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" />
           チェンジ (-2pt)
         </Button>
         <Dialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-1 h-8 bg-transparent" disabled={isAnimating}>
+            <Button variant="outline" size="sm" className="flex-1 h-8 bg-transparent text-xs sm:text-sm" disabled={isAnimating}>
               終了
             </Button>
           </DialogTrigger>
