@@ -7,6 +7,8 @@ import {
   getRandomPokemon,
   getPokemonByFirstChar,
   getAllPokemonSorted,
+  getPokemonById,
+  getPokemonIdByName,
   type PokemonData,
 } from "@/lib/pokemon-data"
 import { KATAKANA_LIST, DAKUTEN_MAP, RESTRICTED_POKEMON } from "@/lib/constants"
@@ -85,11 +87,29 @@ export function PokemonShiritoriGame() {
   useEffect(() => {
     loadPokemonData().then((data) => {
       setPokemonDatabase(data)
-      const start = getRandomPokemon(data, (pokemon) => {
-        const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
-        return lastChar !== "ン"
-      })
-      const goal = getRandomPokemon(data)
+      
+      // URLパラメータからスタート・ゴールIDを取得
+      const urlParams = new URLSearchParams(window.location.search)
+      const startId = urlParams.get('start')
+      const goalId = urlParams.get('goal')
+      
+      let start: PokemonData | null = null
+      let goal: PokemonData | null = null
+      
+      // URLパラメータが指定されている場合はそれを使用
+      if (startId && goalId) {
+        start = getPokemonById(data, startId)
+        goal = getPokemonById(data, goalId)
+      }
+      
+      // パラメータが無効または未指定の場合はランダムに生成
+      if (!start || !goal) {
+        start = getRandomPokemon(data, (pokemon) => {
+          const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
+          return lastChar !== "ン"
+        })
+        goal = getRandomPokemon(data)
+      }
 
       if (start && goal) {
         const startPoke: Pokemon = {
@@ -397,7 +417,14 @@ export function PokemonShiritoriGame() {
     const changesUsed = 3 - passesLeft
     const hintText = usedHint ? "ヒントあり" : "ヒントなし"
 
-    const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"}\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\nhttps://ny-an.github.io/pokeshiri-game/`
+    // スタート・ゴールIDを含むURLを生成
+    const startId = getPokemonIdByName(pokemonDatabase, startPokemon?.name || "")
+    const goalId = getPokemonIdByName(pokemonDatabase, goalPokemon?.name || "")
+    const shareUrl = startId && goalId 
+      ? `https://ny-an.github.io/pokeshiri-game/?start=${startId}&goal=${goalId}`
+      : "https://ny-an.github.io/pokeshiri-game/"
+
+    const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"}\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\n同じ問題でチャレンジ！\n${shareUrl}`
 
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
     window.open(twitterUrl, "_blank")

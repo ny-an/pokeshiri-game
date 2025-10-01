@@ -83,7 +83,7 @@ export function ResultModal({
           <div className="space-y-2">
             <Button onClick={handleShareToX} size="sm" className="w-full bg-black hover:bg-black/90 text-white">
               <Share2 className="w-4 h-4 mr-2" />
-              Xに投稿しよう
+              同じ問題でチャレンジ！
             </Button>
             <Button
               onClick={() => {

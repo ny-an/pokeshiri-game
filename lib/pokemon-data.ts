@@ -86,3 +86,23 @@ export function getAllPokemonSorted(pokemonMap: Map<string, PokemonData>): Pokem
     return numA - numB
   })
 }
+
+export function getPokemonById(
+  pokemonMap: Map<string, PokemonData>,
+  id: string,
+): PokemonData | null {
+  for (const pokemon of pokemonMap.values()) {
+    if (pokemon.number === id) {
+      return pokemon
+    }
+  }
+  return null
+}
+
+export function getPokemonIdByName(
+  pokemonMap: Map<string, PokemonData>,
+  name: string,
+): string | null {
+  const pokemon = pokemonMap.get(name)
+  return pokemon ? pokemon.number : null
+}
