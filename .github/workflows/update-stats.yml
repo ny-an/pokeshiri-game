@@ -10,7 +10,7 @@ on:
 
 # GitHub Pagesへのデプロイ権限
 permissions:
-  contents: read
+  contents: write  # stats.jsonの更新とコミットに必要
   pages: write
   id-token: write
 
@@ -47,6 +47,19 @@ jobs:
       run: |
         echo "🔍 Google Analytics データを取得中..."
         node scripts/fetch-analytics.js
+        
+    - name: 💾 Commit and Push Updated Stats
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/stats.json
+        if git diff --staged --quiet; then
+          echo "📊 統計データに変更はありません"
+        else
+          git commit -m "📊 統計データを自動更新 - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+          echo "✅ 統計データを更新しました"
+        fi
         
     - name: 🏗️ Build Next.js application
       env:
