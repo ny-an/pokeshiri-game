@@ -262,6 +262,7 @@ export function updateStatsOnGameEnd(
   totalAnswers: number,
   maxCombo: number = 0
 ): PersonalStats {
+  console.log('updateStatsOnGameEnd called:', { gameMode, maxCombo, isCleared })
   const stats = loadPersonalStats()
   
   stats.totalAnswers += totalAnswers
@@ -281,6 +282,7 @@ export function updateStatsOnGameEnd(
       stats.longestChainSingle = chainLength
     }
     if (maxCombo > stats.maxComboSingle) {
+      console.log('Updating maxComboSingle:', stats.maxComboSingle, '->', maxCombo)
       stats.maxComboSingle = maxCombo
     }
   } else {
@@ -291,6 +293,7 @@ export function updateStatsOnGameEnd(
       stats.longestChainTimeattack = chainLength
     }
     if (maxCombo > stats.maxComboTimeattack) {
+      console.log('Updating maxComboTimeattack:', stats.maxComboTimeattack, '->', maxCombo)
       stats.maxComboTimeattack = maxCombo
     }
   }

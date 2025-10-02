@@ -296,6 +296,7 @@ export function PokemonShiritoriGame() {
       
       // 個人統計を更新（ゲームオーバー）
       const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1
+      console.log('Game Over - maxCombo:', maxCombo, 'gameMode:', gameMode)
       updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers, maxCombo)
       
       setShowResultModal(true)
@@ -316,6 +317,7 @@ export function PokemonShiritoriGame() {
             
             // 個人統計を更新（タイムアップ）
             const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1 // 最初のポケモンを除く
+            console.log('Time Up - maxCombo:', maxCombo, 'gameMode:', gameMode)
             updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers, maxCombo)
             
             return 0
@@ -429,6 +431,7 @@ export function PokemonShiritoriGame() {
     
     // 個人統計を更新（ゲームクリア）
     const totalAnswers = chain.filter(item => item.type === "pokemon").length
+    console.log('Game Clear - maxCombo:', maxCombo, 'gameMode:', gameMode)
     updateStatsOnGameEnd(gameMode, true, finalScore, chain.length, totalAnswers, maxCombo)
     
     setShowResultModal(true)
@@ -646,6 +649,7 @@ export function PokemonShiritoriGame() {
     
     // 個人統計を更新（ゲームオーバー）
     const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1 // 最初のポケモンを除く
+    console.log('Manual Game Over - maxCombo:', maxCombo, 'gameMode:', gameMode)
     updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers, maxCombo)
     
     setShowResultModal(true)
