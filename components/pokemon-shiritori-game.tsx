@@ -313,6 +313,11 @@ export function PokemonShiritoriGame() {
             setHighScore(saveHighScore(score, highScore, gameMode))
             setShowResultModal(true)
             trackGameOver(score, chain.length, gameMode)
+            
+            // 個人統計を更新（タイムアップ）
+            const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1 // 最初のポケモンを除く
+            updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers, maxCombo)
+            
             return 0
           }
           return prev - 1
@@ -330,7 +335,7 @@ export function PokemonShiritoriGame() {
         clearInterval(timerRef.current)
       }
     }
-  }, [gameMode, gameState, isTimeUp, score, highScore, chain.length])
+  }, [gameMode, gameState, isTimeUp, score, highScore, chain.length, maxCombo])
 
   const getRandomChar = () => {
     const randomIndex = Math.floor(Math.random() * KATAKANA_LIST.length)
