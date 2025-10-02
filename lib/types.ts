@@ -12,6 +12,23 @@ export type ChainItem =
 export type GameState = "playing" | "finished" | "cleared"
 export type GameMode = "single" | "timeattack"
 
+export interface PersonalStats {
+  totalGamesPlayed: number
+  totalGameClears: number
+  totalGameOvers: number
+  totalAnswers: number
+  clearRate: number
+  averageAnswersPerGame: number
+  singleModeGames: number
+  timeattackModeGames: number
+  bestSingleScore: number
+  bestTimeattackScore: number
+  longestChainSingle: number
+  longestChainTimeattack: number
+  firstPlayDate: string
+  lastPlayDate: string
+}
+
 // Gtag用の型定義
 declare global {
   interface Window {

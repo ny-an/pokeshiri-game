@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { loadHighScore } from '@/lib/game-utils'
+import { loadHighScore, loadPersonalStats } from '@/lib/game-utils'
+import type { PersonalStats } from '@/lib/types'
 
 interface GameStats {
   totalPokemonAnswers: number
@@ -34,17 +35,23 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [myHighScoreSingle, setMyHighScoreSingle] = useState(0)
   const [myHighScoreTimeattack, setMyHighScoreTimeattack] = useState(0)
+  const [personalStats, setPersonalStats] = useState<PersonalStats | null>(null)
 
   useEffect(() => {
     if (isOpen) {
       fetchStats()
       loadMyHighScores()
+      loadMyPersonalStats()
     }
   }, [isOpen])
 
   const loadMyHighScores = () => {
     setMyHighScoreSingle(loadHighScore("single"))
     setMyHighScoreTimeattack(loadHighScore("timeattack"))
+  }
+
+  const loadMyPersonalStats = () => {
+    setPersonalStats(loadPersonalStats())
   }
 
   const fetchStats = async () => {
@@ -87,6 +94,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
       day: '2-digit'
     })
   }
+
 
   if (loading) {
     return (
@@ -272,6 +280,99 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             </div>
           </div>
 
+          {/* 自分の記録 */}
+          {personalStats && personalStats.totalGamesPlayed > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  👤 あなたの記録
+                </CardTitle>
+                <CardDescription>
+                  あなたの個人統計データ
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 個人統計メイン */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 個人クリア数 */}
+                  <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-600">
+                      {personalStats.totalGameClears.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-emerald-800 font-medium">
+                      クリア数
+                    </div>
+                    <Badge variant="secondary" className="mt-2">
+                      ✅ 成功
+                    </Badge>
+                  </div>
+
+                  {/* 総回答数 */}
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {personalStats.totalAnswers.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-blue-800 font-medium">
+                      総回答数
+                    </div>
+                    <Badge variant="secondary" className="mt-2">
+                      🎯 回答
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* 個人記録詳細 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* シングルモード記録 */}
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">
+                      {personalStats.bestSingleScore.toLocaleString()} pt
+                    </div>
+                    <div className="text-sm text-blue-800 font-medium">
+                      シングル最高得点
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      最長: {personalStats.longestChainSingle} 回答
+                    </div>
+                  </div>
+
+                  {/* タイムアタック記録 */}
+                  <div className="text-center p-4 bg-amber-50 rounded-lg">
+                    <div className="text-xl font-bold text-amber-600">
+                      {personalStats.bestTimeattackScore.toLocaleString()} pt
+                    </div>
+                    <div className="text-sm text-amber-800 font-medium">
+                      TA最高得点
+                    </div>
+                    <div className="text-xs text-amber-600 mt-1">
+                      最長: {personalStats.longestChainTimeattack} 回答
+                    </div>
+                  </div>
+                </div>
+
+                {/* 個人統計詳細 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">遊んだゲーム数:</span>
+                    <span className="font-medium">{personalStats.totalGamesPlayed.toLocaleString()} ゲーム</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">平均回答数/ゲーム:</span>
+                    <span className="font-medium">{personalStats.averageAnswersPerGame.toFixed(1)} 回</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">シングルモード:</span>
+                    <span className="font-medium">{personalStats.singleModeGames.toLocaleString()} ゲーム</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">タイムアタック:</span>
+                    <span className="font-medium">{personalStats.timeattackModeGames.toLocaleString()} ゲーム</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* 詳細データ */}
           <Card>
             <CardHeader>
@@ -299,22 +400,6 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 </div>
               </div>
               
-              {/* 自分の記録 */}
-              {(myHighScoreSingle > 0 || myHighScoreTimeattack > 0) && (
-                <div className="border-t pt-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">あなたの記録</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">シングル最高得点:</span>
-                      <span className="font-medium">{myHighScoreSingle.toLocaleString()} pt</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">TA最高得点:</span>
-                      <span className="font-medium">{myHighScoreTimeattack.toLocaleString()} pt</span>
-                    </div>
-                  </div>
-                </div>
-              )}
               
               {stats.error && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

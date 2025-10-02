@@ -1,5 +1,5 @@
-import { DAKUTEN_MAP, SMALL_TO_LARGE_KANA, TYPE_EMOJIS, TYPE_BG_COLORS, HIGH_SCORE_KEY, HIGH_SCORE_TA_KEY, HISTORY_KEY } from "./constants"
-import type { Pokemon, ChainItem, GameMode } from "./types"
+import { DAKUTEN_MAP, SMALL_TO_LARGE_KANA, TYPE_EMOJIS, TYPE_BG_COLORS, HIGH_SCORE_KEY, HIGH_SCORE_TA_KEY, HISTORY_KEY, PERSONAL_STATS_KEY } from "./constants"
+import type { Pokemon, ChainItem, GameMode, PersonalStats } from "./types"
 
 export function getLastChar(name: string): string {
   let lastChar = name.charAt(name.length - 1)
@@ -192,4 +192,107 @@ export function getNextMilestoneToShow(currentProgress: number, lastShownMilesto
   }
   
   return null
+}
+
+// 個人統計を読み込む関数
+export function loadPersonalStats(): PersonalStats {
+  const saved = localStorage.getItem(PERSONAL_STATS_KEY)
+  if (saved) {
+    try {
+      return JSON.parse(saved)
+    } catch (error) {
+      console.error("Failed to parse personal stats:", error)
+    }
+  }
+  
+  // デフォルトの統計データ
+  return {
+    totalGamesPlayed: 0,
+    totalGameClears: 0,
+    totalGameOvers: 0,
+    totalAnswers: 0,
+    clearRate: 0,
+    averageAnswersPerGame: 0,
+    singleModeGames: 0,
+    timeattackModeGames: 0,
+    bestSingleScore: 0,
+    bestTimeattackScore: 0,
+    longestChainSingle: 0,
+    longestChainTimeattack: 0,
+    firstPlayDate: new Date().toISOString(),
+    lastPlayDate: new Date().toISOString()
+  }
+}
+
+// 個人統計を保存する関数
+export function savePersonalStats(stats: PersonalStats): void {
+  localStorage.setItem(PERSONAL_STATS_KEY, JSON.stringify(stats))
+}
+
+// ゲーム開始時の統計更新
+export function updateStatsOnGameStart(gameMode: GameMode): PersonalStats {
+  const stats = loadPersonalStats()
+  
+  stats.totalGamesPlayed++
+  if (gameMode === "single") {
+    stats.singleModeGames++
+  } else {
+    stats.timeattackModeGames++
+  }
+  
+  // 初回プレイ日を設定
+  if (stats.totalGamesPlayed === 1) {
+    stats.firstPlayDate = new Date().toISOString()
+  }
+  
+  stats.lastPlayDate = new Date().toISOString()
+  
+  savePersonalStats(stats)
+  return stats
+}
+
+// ゲーム終了時の統計更新
+export function updateStatsOnGameEnd(
+  gameMode: GameMode, 
+  isCleared: boolean, 
+  score: number, 
+  chainLength: number, 
+  totalAnswers: number
+): PersonalStats {
+  const stats = loadPersonalStats()
+  
+  stats.totalAnswers += totalAnswers
+  
+  if (isCleared) {
+    stats.totalGameClears++
+  } else {
+    stats.totalGameOvers++
+  }
+  
+  // 最高スコアと最長チェーンの更新
+  if (gameMode === "single") {
+    if (score > stats.bestSingleScore) {
+      stats.bestSingleScore = score
+    }
+    if (chainLength > stats.longestChainSingle) {
+      stats.longestChainSingle = chainLength
+    }
+  } else {
+    if (score > stats.bestTimeattackScore) {
+      stats.bestTimeattackScore = score
+    }
+    if (chainLength > stats.longestChainTimeattack) {
+      stats.longestChainTimeattack = chainLength
+    }
+  }
+  
+  // 成功率と平均回答数の計算
+  const totalGames = stats.totalGameClears + stats.totalGameOvers
+  stats.clearRate = totalGames > 0 ? (stats.totalGameClears / totalGames) * 100 : 0
+  stats.averageAnswersPerGame = totalGames > 0 ? stats.totalAnswers / totalGames : 0
+  
+  stats.lastPlayDate = new Date().toISOString()
+  
+  savePersonalStats(stats)
+  return stats
 }

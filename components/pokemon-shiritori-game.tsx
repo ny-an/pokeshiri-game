@@ -29,6 +29,8 @@ import {
   trackGameOver,
   checkProgressMilestone,
   getNextMilestoneToShow,
+  updateStatsOnGameStart,
+  updateStatsOnGameEnd,
 } from "@/lib/game-utils"
 import type { Pokemon, ChainItem, GameState, GameMode } from "@/lib/types"
 import { GameHeader } from "./game-header"
@@ -292,6 +294,10 @@ export function PokemonShiritoriGame() {
       // ゲームオーバーのトラッキング
       trackGameOver(score, chain.length, gameMode)
       
+      // 個人統計を更新（ゲームオーバー）
+      const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1
+      updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers)
+      
       setShowResultModal(true)
     }
   }, [gameState, nextChar, usedNames, pokemonDatabase, score, highScore])
@@ -415,6 +421,10 @@ export function PokemonShiritoriGame() {
     
     // ゲームクリアのトラッキング
     trackGameClear(finalScore, chain.length, gameMode)
+    
+    // 個人統計を更新（ゲームクリア）
+    const totalAnswers = chain.filter(item => item.type === "pokemon").length
+    updateStatsOnGameEnd(gameMode, true, finalScore, chain.length, totalAnswers)
     
     setShowResultModal(true)
     return
@@ -616,6 +626,9 @@ export function PokemonShiritoriGame() {
       setTimeLeft(60)
       setIsTimeUp(false)
     }
+    
+    // ゲーム開始時の個人統計を更新
+    updateStatsOnGameStart(gameMode)
   }
 
   const handleFinish = () => {
@@ -625,6 +638,10 @@ export function PokemonShiritoriGame() {
     
     // ゲームオーバーのトラッキング
     trackGameOver(score, chain.length, gameMode)
+    
+    // 個人統計を更新（ゲームオーバー）
+    const totalAnswers = chain.filter(item => item.type === "pokemon").length - 1 // 最初のポケモンを除く
+    updateStatsOnGameEnd(gameMode, false, score, chain.length, totalAnswers)
     
     setShowResultModal(true)
   }
