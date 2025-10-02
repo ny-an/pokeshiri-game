@@ -25,6 +25,7 @@ interface ResultModalProps {
   isTimeUp?: boolean
   handleShareToX: () => void
   handleReset: () => void
+  onClose?: () => void
 }
 
 export function ResultModal({
@@ -44,6 +45,7 @@ export function ResultModal({
   isTimeUp,
   handleShareToX,
   handleReset,
+  onClose,
 }: ResultModalProps) {
   const getTitle = () => {
     if (gameMode === 'timeattack') {
@@ -125,6 +127,9 @@ export function ResultModal({
             <Button
               onClick={() => {
                 setShowResultModal(false)
+                if (onClose) {
+                  onClose()
+                }
                 handleReset()
               }}
               size="sm"

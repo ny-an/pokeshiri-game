@@ -85,6 +85,9 @@ export function PokemonShiritoriGame() {
   const [previousProgress, setPreviousProgress] = useState(0)
   const [lastShownMilestone, setLastShownMilestone] = useState(0)
   const [debugMode, setDebugMode] = useState(false)
+  
+  // タイムアタック中の進捗情報を蓄積
+  const [timeAttackPendingMilestones, setTimeAttackPendingMilestones] = useState<{milestone: number, pokemonName: string}[]>([])
 
   // タイムアタック用の状態
   const [timeLeft, setTimeLeft] = useState(60)
@@ -92,6 +95,37 @@ export function PokemonShiritoriGame() {
   const [showModeConfirm, setShowModeConfirm] = useState(false)
   const [targetMode, setTargetMode] = useState<GameMode>("single")
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // タイムアタック終了時に蓄積された進捗モーダルを順番に表示する関数
+  const showTimeAttackProgressModals = (): void => {
+    if (timeAttackPendingMilestones.length === 0) return
+    
+    let currentIndex = 0
+    
+    // 最初のモーダルを表示
+    if (currentIndex < timeAttackPendingMilestones.length) {
+      const pendingMilestone = timeAttackPendingMilestones[currentIndex]
+      setProgressMilestone(pendingMilestone.milestone)
+      setNewPokemonName(pendingMilestone.pokemonName)
+      setShowProgressModal(true)
+      currentIndex++
+    }
+    
+    // ProgressModalのonCloseで次のモーダルを表示するためのコールバックを設定
+    (window as any).showNextTimeAttackModal = () => {
+      if (currentIndex < timeAttackPendingMilestones.length) {
+        const pendingMilestone = timeAttackPendingMilestones[currentIndex]
+        setProgressMilestone(pendingMilestone.milestone)
+        setNewPokemonName(pendingMilestone.pokemonName)
+        setShowProgressModal(true)
+        currentIndex++
+      } else {
+        // すべてのモーダルを表示し終わったら蓄積をクリア
+        setTimeAttackPendingMilestones([])
+        delete (window as any).showNextTimeAttackModal
+      }
+    }
+  }
 
   // デバッグモードの有効化（隠しコマンド）
   useEffect(() => {
@@ -514,12 +548,21 @@ export function PokemonShiritoriGame() {
     // マイルストーンをチェック（順番に表示）
     const nextMilestone = getNextMilestoneToShow(currentProgress, lastShownMilestone)
     if (nextMilestone !== null) {
-      setProgressMilestone(nextMilestone)
-      setNewPokemonName(inputKatakana)
-      setShowProgressModal(true)
-      setLastShownMilestone(nextMilestone)
-      // 最後に表示したマイルストーンを保存
-      localStorage.setItem("pokemon-shiritori-last-shown-milestone", nextMilestone.toString())
+      if (gameMode === 'timeattack') {
+        // タイムアタックモードでは進捗情報を蓄積
+        setTimeAttackPendingMilestones(prev => [...prev, {milestone: nextMilestone, pokemonName: inputKatakana}])
+        setLastShownMilestone(nextMilestone)
+        // 最後に表示したマイルストーンを保存
+        localStorage.setItem("pokemon-shiritori-last-shown-milestone", nextMilestone.toString())
+      } else {
+        // 通常モードでは即座に表示
+        setProgressMilestone(nextMilestone)
+        setNewPokemonName(inputKatakana)
+        setShowProgressModal(true)
+        setLastShownMilestone(nextMilestone)
+        // 最後に表示したマイルストーンを保存
+        localStorage.setItem("pokemon-shiritori-last-shown-milestone", nextMilestone.toString())
+      }
     }
     setPreviousProgress(currentProgress)
     
@@ -633,6 +676,12 @@ export function PokemonShiritoriGame() {
     if (gameMode === 'timeattack') {
       setTimeLeft(60)
       setIsTimeUp(false)
+      // 蓄積された進捗情報もクリア
+      setTimeAttackPendingMilestones([])
+      // グローバルコールバックもクリア
+      if (typeof window !== 'undefined') {
+        delete (window as any).showNextTimeAttackModal
+      }
     }
     
     // ゲーム開始時の個人統計を更新
@@ -844,11 +893,27 @@ export function PokemonShiritoriGame() {
           isTimeUp={isTimeUp}
           handleShareToX={handleShareToX}
           handleReset={handleReset}
+          onClose={() => {
+            // タイムアタックモードでゲーム終了時に蓄積された進捗モーダルを表示
+            if (gameMode === 'timeattack' && timeAttackPendingMilestones.length > 0) {
+              setTimeout(() => {
+                showTimeAttackProgressModals()
+              }, 500) // ResultModalが閉じてから少し間隔を空けて表示
+            }
+          }}
         />
 
         <ProgressModal
           isOpen={showProgressModal}
-          onClose={() => setShowProgressModal(false)}
+          onClose={() => {
+            setShowProgressModal(false)
+            // タイムアタック終了後の連続表示の場合は次のモーダルを表示
+            if (typeof window !== 'undefined' && (window as any).showNextTimeAttackModal) {
+              setTimeout(() => {
+                (window as any).showNextTimeAttackModal()
+              }, 500) // 少し間隔を空けて次のモーダルを表示
+            }
+          }}
           progress={progressMilestone || 0}
           caughtCount={displayCaughtCount}
           totalCount={totalCount}
