@@ -49,6 +49,8 @@ jobs:
         node scripts/fetch-analytics.js
         
     - name: 🏗️ Build Next.js application
+      env:
+        NODE_ENV: production
       run: |
         echo "🏗️ Next.js アプリケーションをビルド中..."
         npm run build

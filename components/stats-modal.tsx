@@ -41,7 +41,9 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/stats.json')
+      // GitHub PagesのbasePathを考慮
+      const basePath = process.env.NODE_ENV === 'production' ? '/pokeshiri-game' : ''
+      const response = await fetch(`${basePath}/stats.json`)
       
       if (!response.ok) {
         throw new Error('統計データの取得に失敗しました')

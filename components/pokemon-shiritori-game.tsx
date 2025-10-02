@@ -37,6 +37,7 @@ import { GameInput } from "./game-input"
 import { ResultModal } from "./result-modal"
 import { ProgressModal } from "./progress-modal"
 import { StatsModal } from "./stats-modal"
+import { VersionChecker } from "./version-checker"
 
 
 export function PokemonShiritoriGame() {
@@ -646,6 +647,13 @@ export function PokemonShiritoriGame() {
     <div
       className={`fixed inset-0 overflow-auto flex items-center justify-center p-4 transition-colors duration-500 ${getComboBackgroundColor(combo, comboType)}`}
     >
+      {/* バージョンチェッカーを追加 */}
+      <VersionChecker 
+        onUpdateAvailable={(newVersion) => {
+          console.log(`新しいバージョンが利用可能です: v${newVersion}`)
+        }}
+      />
+      
       <Card className="w-full max-w-2xl p-4 md:p-5 space-y-1.5">
         <GameHeader
           startPokemon={startPokemon}
