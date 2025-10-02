@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { loadHighScore } from '@/lib/game-utils'
 
 interface GameStats {
   totalPokemonAnswers: number
@@ -13,8 +14,10 @@ interface GameStats {
   totalGames: number
   clearRate: number
   averageAnswersPerGame: number
-  maxScore: number
-  maxChainLength: number
+  maxScore: number // シングルモードの最高スコア（後方互換性）
+  maxScoreTA: number // タイムアタックモードの最高スコア
+  maxChainLength: number // シングルモードの最長チェーン（後方互換性）
+  maxChainLengthTA: number // タイムアタックモードの最長チェーン
   serviceStartDate: string
   lastUpdated: string
   error?: string
@@ -29,12 +32,20 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
   const [stats, setStats] = useState<GameStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [myHighScoreSingle, setMyHighScoreSingle] = useState(0)
+  const [myHighScoreTimeattack, setMyHighScoreTimeattack] = useState(0)
 
   useEffect(() => {
     if (isOpen) {
       fetchStats()
+      loadMyHighScores()
     }
   }, [isOpen])
+
+  const loadMyHighScores = () => {
+    setMyHighScoreSingle(loadHighScore("single"))
+    setMyHighScoreTimeattack(loadHighScore("timeattack"))
+  }
 
   const fetchStats = async () => {
     try {
@@ -193,30 +204,70 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
           </div>
 
           {/* 記録統計 */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* 最高得点 */}
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">
-                {stats.maxScore > 0 ? stats.maxScore.toLocaleString() : '取得中...'}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* シングルモード最高得点 */}
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.maxScore > 0 ? stats.maxScore.toLocaleString() : '記録なし'}
               </div>
-              <div className="text-sm text-yellow-800 font-medium">
-                最高得点
+              <div className="text-sm text-blue-800 font-medium">
+                シングル最高得点
               </div>
-              <Badge variant="secondary" className="mt-2">
-                ⭐ 得点
-              </Badge>
+              {myHighScoreSingle > 0 && myHighScoreSingle >= stats.maxScore && (
+                <Badge variant="default" className="mt-2 bg-blue-600">
+                  🏆 あなたの記録です
+                </Badge>
+              )}
+              {(!myHighScoreSingle || myHighScoreSingle < stats.maxScore) && stats.maxScore > 0 && (
+                <Badge variant="secondary" className="mt-2">
+                  ⭐ 累計記録
+                </Badge>
+              )}
             </div>
 
-            {/* 最長回答 */}
+            {/* タイムアタック最高得点 */}
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.maxScoreTA > 0 ? stats.maxScoreTA.toLocaleString() : '記録なし'}
+              </div>
+              <div className="text-sm text-yellow-800 font-medium">
+                TA最高得点
+              </div>
+              {myHighScoreTimeattack > 0 && myHighScoreTimeattack >= stats.maxScoreTA && (
+                <Badge variant="default" className="mt-2 bg-yellow-600">
+                  🏆 あなたの記録です
+                </Badge>
+              )}
+              {(!myHighScoreTimeattack || myHighScoreTimeattack < stats.maxScoreTA) && stats.maxScoreTA > 0 && (
+                <Badge variant="secondary" className="mt-2">
+                  ⚡ 累計記録
+                </Badge>
+              )}
+            </div>
+
+            {/* 最長回答（シングル） */}
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <div className="text-2xl font-bold text-orange-600">
-                {stats.maxChainLength > 0 ? stats.maxChainLength : '取得中...'}
+                {stats.maxChainLength > 0 ? stats.maxChainLength : '記録なし'}
               </div>
               <div className="text-sm text-orange-800 font-medium">
-                最長回答
+                シングル最長回答
               </div>
               <Badge variant="secondary" className="mt-2">
                 🔥 連続
+              </Badge>
+            </div>
+
+            {/* 最長回答（タイムアタック） */}
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.maxChainLengthTA > 0 ? stats.maxChainLengthTA : '記録なし'}
+              </div>
+              <div className="text-sm text-purple-800 font-medium">
+                TA最長回答
+              </div>
+              <Badge variant="secondary" className="mt-2">
+                ⚡ 連続
               </Badge>
             </div>
           </div>
@@ -228,7 +279,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 📊 詳細データ
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">総ゲーム数:</span>
@@ -247,6 +298,23 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                   <span className="font-medium">3時間ごと</span>
                 </div>
               </div>
+              
+              {/* 自分の記録 */}
+              {(myHighScoreSingle > 0 || myHighScoreTimeattack > 0) && (
+                <div className="border-t pt-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">あなたの記録</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">シングル最高得点:</span>
+                      <span className="font-medium">{myHighScoreSingle.toLocaleString()} pt</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">TA最高得点:</span>
+                      <span className="font-medium">{myHighScoreTimeattack.toLocaleString()} pt</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {stats.error && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

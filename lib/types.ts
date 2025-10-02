@@ -10,6 +10,7 @@ export type ChainItem =
   | { type: "hint"; pokemon: Pokemon; points: number }
 
 export type GameState = "playing" | "finished" | "cleared"
+export type GameMode = "single" | "timeattack"
 
 // Gtag用の型定義
 declare global {

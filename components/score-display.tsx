@@ -1,6 +1,6 @@
 import { Zap } from "lucide-react"
 import { getLastPokemon, getTypeEmoji } from "@/lib/game-utils"
-import type { ChainItem } from "@/lib/types"
+import type { ChainItem, GameMode } from "@/lib/types"
 
 interface ScoreDisplayProps {
   score: number
@@ -12,6 +12,7 @@ interface ScoreDisplayProps {
   passesLeft: number
   passesKey: number
   chain: ChainItem[]
+  gameMode: GameMode
 }
 
 export function ScoreDisplay({
@@ -24,6 +25,7 @@ export function ScoreDisplay({
   passesLeft,
   passesKey,
   chain,
+  gameMode,
 }: ScoreDisplayProps) {
   return (
     <div className="grid grid-cols-3 gap-2">
@@ -32,7 +34,11 @@ export function ScoreDisplay({
           {score}
         </p>
         <p className="text-xs text-muted-foreground">スコア</p>
-        {highScore > 0 && <p className="text-xs text-muted-foreground mt-0.5">最高: {highScore}pt</p>}
+        {highScore > 0 && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            最高: {highScore}pt {gameMode === 'timeattack' && '(TA)'}
+          </p>
+        )}
       </div>
       <div className="bg-card rounded-lg p-1.5 border text-center">
         <div className="flex items-center justify-center gap-1">

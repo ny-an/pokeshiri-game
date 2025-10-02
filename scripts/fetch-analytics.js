@@ -75,49 +75,6 @@ async function fetchAnalyticsData() {
       },
     });
 
-    // スコアと チェーン長の最大値を取得
-    const maxValuesResponse = await analyticsdata.properties.runReport({
-      property: `properties/${propertyId}`,
-      requestBody: {
-        dateRanges: [
-          {
-            startDate: startDate,
-            endDate: endDate,
-          },
-        ],
-        dimensions: [
-          {
-            name: 'eventName',
-          },
-        ],
-        metrics: [
-          {
-            name: 'eventCount',
-          },
-        ],
-        dimensionFilter: {
-          filter: {
-            fieldName: 'eventName',
-            inListFilter: {
-              values: ['game_clear', 'game_over'],
-            },
-          },
-        },
-        // カスタムメトリクスでスコアとチェーン長の最大値を取得
-        metricFilter: {
-          filter: {
-            fieldName: 'eventCount',
-            numericFilter: {
-              operation: 'GREATER_THAN',
-              value: {
-                int64Value: '0',
-              },
-            },
-          },
-        },
-      },
-    });
-
     // レスポンスデータを整理
     const stats = {
       totalPokemonAnswers: 0,
@@ -126,8 +83,10 @@ async function fetchAnalyticsData() {
       totalGames: 0,
       clearRate: 0,
       averageAnswersPerGame: 0,
-      maxScore: 0, // 注意: GA4の標準レポートでは直接取得困難
-      maxChainLength: 0, // 注意: GA4の標準レポートでは直接取得困難
+      maxScore: 0, // シングルモードの最高スコア（後方互換性のため残す）
+      maxScoreTA: 0, // タイムアタックモードの最高スコア
+      maxChainLength: 0, // シングルモードの最長チェーン（後方互換性のため残す）
+      maxChainLengthTA: 0, // タイムアタックモードの最長チェーン
       serviceStartDate: startDate,
       lastUpdated: new Date().toISOString(),
     };
@@ -161,11 +120,83 @@ async function fetchAnalyticsData() {
       ? stats.totalPokemonAnswers / stats.totalGames
       : 0;
 
-    // 注意: maxScore と maxChainLength は GA4 の標準レポートでは直接取得が困難
-    // 将来的にはカスタムディメンション/メトリクスまたは BigQuery エクスポートが必要
-    // 現在は仮の値を設定
-    stats.maxScore = 0;
-    stats.maxChainLength = 0;
+    // カスタムディメンション・指標を使ってモード別の最高スコア・最長チェーンを取得
+    try {
+      // シングルモードの最高スコア・最長チェーンを取得
+      const singleModeResponse = await analyticsdata.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate: startDate, endDate: endDate }],
+          dimensions: [
+            { name: 'customEvent:game_mode' }
+          ],
+          metrics: [
+            { name: 'customEvent:score' },
+            { name: 'customEvent:chain_length' }
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'customEvent:game_mode',
+              stringFilter: { value: 'single' }
+            }
+          },
+          metricAggregations: ['MAXIMUM'],
+          limit: 1
+        }
+      });
+
+      // タイムアタックモードの最高スコア・最長チェーンを取得
+      const timeattackModeResponse = await analyticsdata.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate: startDate, endDate: endDate }],
+          dimensions: [
+            { name: 'customEvent:game_mode' }
+          ],
+          metrics: [
+            { name: 'customEvent:score' },
+            { name: 'customEvent:chain_length' }
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'customEvent:game_mode',
+              stringFilter: { value: 'timeattack' }
+            }
+          },
+          metricAggregations: ['MAXIMUM'],
+          limit: 1
+        }
+      });
+
+      // シングルモードの結果を処理
+      if (singleModeResponse.data.rows && singleModeResponse.data.rows.length > 0) {
+        const row = singleModeResponse.data.rows[0];
+        stats.maxScore = parseInt(row.metricValues?.[0]?.value || '0');
+        stats.maxChainLength = parseInt(row.metricValues?.[1]?.value || '0');
+      }
+
+      // タイムアタックモードの結果を処理
+      if (timeattackModeResponse.data.rows && timeattackModeResponse.data.rows.length > 0) {
+        const row = timeattackModeResponse.data.rows[0];
+        stats.maxScoreTA = parseInt(row.metricValues?.[0]?.value || '0');
+        stats.maxChainLengthTA = parseInt(row.metricValues?.[1]?.value || '0');
+      }
+
+      console.log(`📊 モード別最高記録:`);
+      console.log(`- シングル最高スコア: ${stats.maxScore}`);
+      console.log(`- シングル最長チェーン: ${stats.maxChainLength}`);
+      console.log(`- TA最高スコア: ${stats.maxScoreTA}`);
+      console.log(`- TA最長チェーン: ${stats.maxChainLengthTA}`);
+
+    } catch (customError) {
+      console.warn('⚠️ カスタムディメンション・指標の取得に失敗:', customError.message);
+      console.log('💡 カスタムディメンション・指標が正しく設定されていない可能性があります');
+      // カスタムディメンション取得失敗時はデフォルト値を維持
+      stats.maxScore = 0;
+      stats.maxScoreTA = 0;
+      stats.maxChainLength = 0;
+      stats.maxChainLengthTA = 0;
+    }
 
     console.log('📊 取得した統計データ:');
     console.log(`- 総回答数: ${stats.totalPokemonAnswers.toLocaleString()}`);
@@ -192,7 +223,9 @@ async function fetchAnalyticsData() {
       clearRate: 0,
       averageAnswersPerGame: 0,
       maxScore: 0,
+      maxScoreTA: 0,
       maxChainLength: 0,
+      maxChainLengthTA: 0,
       serviceStartDate: '2024-01-15',
       lastUpdated: new Date().toISOString(),
       error: error.message,

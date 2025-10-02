@@ -1,19 +1,35 @@
-import { Sparkles } from "lucide-react"
+import { Sparkles, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import type { ChainItem } from "@/lib/types"
+import type { ChainItem, GameMode } from "@/lib/types"
 
 interface ChainDisplayProps {
   chain: ChainItem[]
   chainEndRef: React.RefObject<HTMLDivElement>
+  gameMode: GameMode
+  timeLeft?: number
 }
 
-export function ChainDisplay({ chain, chainEndRef }: ChainDisplayProps) {
+export function ChainDisplay({ chain, chainEndRef, gameMode, timeLeft }: ChainDisplayProps) {
+  const formatTime = (seconds: number) => {
+    return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
+  }
+
   return (
     <div className="space-y-1">
-      <p className="text-sm font-medium flex items-center gap-1.5">
-        <Sparkles className="w-3.5 h-3.5" />
-        しりとりチェーン ({chain.filter((item) => item.type === "pokemon").length}匹)
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5" />
+          しりとりチェーン ({chain.filter((item) => item.type === "pokemon").length}匹)
+        </p>
+        {gameMode === 'timeattack' && timeLeft !== undefined && (
+          <div className="flex items-center gap-1.5 text-sm">
+            <Clock className="w-3.5 h-3.5" />
+            <span className={`font-mono font-bold ${timeLeft <= 10 ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
+        )}
+      </div>
       <div className="bg-muted rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
         {chain.map((item, index) => {
           if (item.type === "pokemon") {

@@ -9,11 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import type { Pokemon } from "@/lib/types"
+import type { Pokemon, GameMode } from "@/lib/types"
 
 interface GameHeaderProps {
   startPokemon: Pokemon
   goalPokemon: Pokemon
+  gameMode: GameMode
+  onModeChange: (mode: GameMode) => void
   showRules: boolean
   setShowRules: (show: boolean) => void
   showPokedex: boolean
@@ -33,6 +35,8 @@ interface GameHeaderProps {
 export function GameHeader({
   startPokemon,
   goalPokemon,
+  gameMode,
+  onModeChange,
   showRules,
   setShowRules,
   showPokedex,
@@ -76,7 +80,29 @@ export function GameHeader({
           </DialogContent>
         </Dialog>
       </h1>
-      <p className="text-sm text-muted-foreground">スコアアタック</p>
+      <div className="flex items-center justify-center gap-2 text-sm">
+        <button 
+          onClick={() => onModeChange('single')}
+          className={`px-2 py-1 rounded transition-colors ${
+            gameMode === 'single' 
+              ? 'text-primary font-medium' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          シングル
+        </button>
+        <span className="text-muted-foreground">|</span>
+        <button 
+          onClick={() => onModeChange('timeattack')}
+          className={`px-2 py-1 rounded transition-colors ${
+            gameMode === 'timeattack' 
+              ? 'text-primary font-medium' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          TA
+        </button>
+      </div>
       <Dialog open={showPokedex} onOpenChange={setShowPokedex}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon" className="absolute left-0 top-0 h-8 w-8">

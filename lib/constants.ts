@@ -185,6 +185,7 @@ export const TYPE_BG_COLORS: { [key: string]: string } = {
 }
 
 export const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
+export const HIGH_SCORE_TA_KEY = "pokemon-shiritori-high-score-ta"
 export const HISTORY_KEY = "pokemon-shiritori-history"
 
 export const RESTRICTED_POKEMON = ["ロトム", "オドリドリ", "ミノマダム"]

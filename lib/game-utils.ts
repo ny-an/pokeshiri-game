@@ -1,5 +1,5 @@
-import { DAKUTEN_MAP, SMALL_TO_LARGE_KANA, TYPE_EMOJIS, TYPE_BG_COLORS, HIGH_SCORE_KEY, HISTORY_KEY } from "./constants"
-import type { Pokemon, ChainItem } from "./types"
+import { DAKUTEN_MAP, SMALL_TO_LARGE_KANA, TYPE_EMOJIS, TYPE_BG_COLORS, HIGH_SCORE_KEY, HIGH_SCORE_TA_KEY, HISTORY_KEY } from "./constants"
+import type { Pokemon, ChainItem, GameMode } from "./types"
 
 export function getLastChar(name: string): string {
   let lastChar = name.charAt(name.length - 1)
@@ -76,12 +76,19 @@ export function getLastPokemon(chain: ChainItem[]): Pokemon | null {
   return null
 }
 
-export function saveHighScore(newScore: number, currentHighScore: number): number {
+export function saveHighScore(newScore: number, currentHighScore: number, gameMode: GameMode = "single"): number {
   if (newScore > currentHighScore) {
-    localStorage.setItem(HIGH_SCORE_KEY, newScore.toString())
+    const key = gameMode === 'timeattack' ? HIGH_SCORE_TA_KEY : HIGH_SCORE_KEY
+    localStorage.setItem(key, newScore.toString())
     return newScore
   }
   return currentHighScore
+}
+
+export function loadHighScore(gameMode: GameMode = "single"): number {
+  const key = gameMode === 'timeattack' ? HIGH_SCORE_TA_KEY : HIGH_SCORE_KEY
+  const saved = localStorage.getItem(key)
+  return saved ? parseInt(saved, 10) : 0
 }
 
 export function savePokemonHistory(pokemonName: string, currentHistory: { [name: string]: number }): { [name: string]: number } {
@@ -124,26 +131,32 @@ export function getMaskedName(name: string): string {
 }
 
 // Gtagイベント送信関数
-export function trackPokemonAnswer() {
+export function trackPokemonAnswer(pokemonName?: string) {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'pokemon_answer')
+    const eventData: any = {}
+    if (pokemonName) {
+      eventData.pokemon_name = pokemonName
+    }
+    window.gtag('event', 'pokemon_answer', eventData)
   }
 }
 
-export function trackGameClear(score: number, chainLength: number) {
+export function trackGameClear(score: number, chainLength: number, gameMode: GameMode = "single") {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', 'game_clear', {
       'score': score,
-      'chain_length': chainLength
+      'chain_length': chainLength,
+      'game_mode': gameMode
     })
   }
 }
 
-export function trackGameOver(score: number, chainLength: number) {
+export function trackGameOver(score: number, chainLength: number, gameMode: GameMode = "single") {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', 'game_over', {
       'score': score,
-      'chain_length': chainLength
+      'chain_length': chainLength,
+      'game_mode': gameMode
     })
   }
 }

@@ -19,6 +19,7 @@ import {
   hiraganaToKatakana,
   getLastPokemon,
   saveHighScore,
+  loadHighScore,
   savePokemonHistory,
   getTypeEmoji,
   getComboBackgroundColor,
@@ -29,7 +30,7 @@ import {
   checkProgressMilestone,
   getNextMilestoneToShow,
 } from "@/lib/game-utils"
-import type { Pokemon, ChainItem, GameState } from "@/lib/types"
+import type { Pokemon, ChainItem, GameState, GameMode } from "@/lib/types"
 import { GameHeader } from "./game-header"
 import { ScoreDisplay } from "./score-display"
 import { ChainDisplay } from "./chain-display"
@@ -38,6 +39,7 @@ import { ResultModal } from "./result-modal"
 import { ProgressModal } from "./progress-modal"
 import { StatsModal } from "./stats-modal"
 import { VersionChecker } from "./version-checker"
+import { ModeConfirmModal } from "./mode-confirm-modal"
 
 
 export function PokemonShiritoriGame() {
@@ -45,6 +47,7 @@ export function PokemonShiritoriGame() {
   const [isLoading, setIsLoading] = useState(true)
 
   const [gameState, setGameState] = useState<GameState>("playing")
+  const [gameMode, setGameMode] = useState<GameMode>("single")
   const [startPokemon, setStartPokemon] = useState<Pokemon | null>(null)
   const [goalPokemon, setGoalPokemon] = useState<Pokemon | null>(null)
   const [chain, setChain] = useState<ChainItem[]>([])
@@ -80,6 +83,13 @@ export function PokemonShiritoriGame() {
   const [previousProgress, setPreviousProgress] = useState(0)
   const [lastShownMilestone, setLastShownMilestone] = useState(0)
   const [debugMode, setDebugMode] = useState(false)
+
+  // タイムアタック用の状態
+  const [timeLeft, setTimeLeft] = useState(60)
+  const [isTimeUp, setIsTimeUp] = useState(false)
+  const [showModeConfirm, setShowModeConfirm] = useState(false)
+  const [targetMode, setTargetMode] = useState<GameMode>("single")
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // デバッグモードの有効化（隠しコマンド）
   useEffect(() => {
@@ -183,14 +193,11 @@ export function PokemonShiritoriGame() {
   }, [pokemonDatabase, pokemonHistory, lastShownMilestone, debugMode])
 
   useEffect(() => {
-    const HIGH_SCORE_KEY = "pokemon-shiritori-high-score"
     const HISTORY_KEY = "pokemon-shiritori-history"
     const LAST_SHOWN_MILESTONE_KEY = "pokemon-shiritori-last-shown-milestone"
     
-    const savedHighScore = localStorage.getItem(HIGH_SCORE_KEY)
-    if (savedHighScore) {
-      setHighScore(Number.parseInt(savedHighScore, 10))
-    }
+    // ゲームモードに応じてハイスコアを読み込み
+    setHighScore(loadHighScore(gameMode))
 
     const savedHistory = localStorage.getItem(HISTORY_KEY)
     if (savedHistory) {
@@ -205,7 +212,7 @@ export function PokemonShiritoriGame() {
     if (savedLastShownMilestone) {
       setLastShownMilestone(Number.parseInt(savedLastShownMilestone, 10))
     }
-  }, [])
+  }, [gameMode])
 
   useEffect(() => {
     loadPokemonData().then((data) => {
@@ -268,20 +275,74 @@ export function PokemonShiritoriGame() {
     const candidate = getPokemonByFirstChar(pokemonDatabase, nextChar, usedNames, DAKUTEN_MAP)
     if (!candidate) {
       setMessage("💥 出せるポケモンがありません。ゲームオーバー")
-      setHighScore(saveHighScore(score, highScore))
+      setHighScore(saveHighScore(score, highScore, gameMode))
       setGameState("finished")
       setShowEndConfirm(false)
       
       // ゲームオーバーのトラッキング
-      trackGameOver(score, chain.length)
+      trackGameOver(score, chain.length, gameMode)
       
       setShowResultModal(true)
     }
   }, [gameState, nextChar, usedNames, pokemonDatabase, score, highScore])
 
+  // タイムアタックのタイマー管理
+  useEffect(() => {
+    if (gameMode === 'timeattack' && gameState === 'playing' && !isTimeUp) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsTimeUp(true)
+            setGameState("finished")
+            setHighScore(saveHighScore(score, highScore, gameMode))
+            setShowResultModal(true)
+            trackGameOver(score, chain.length, gameMode)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [gameMode, gameState, isTimeUp, score, highScore, chain.length])
+
   const getRandomChar = () => {
     const randomIndex = Math.floor(Math.random() * KATAKANA_LIST.length)
     return KATAKANA_LIST[randomIndex]
+  }
+
+  const handleModeChange = (newMode: GameMode) => {
+    if (newMode === gameMode) return
+    
+    setTargetMode(newMode)
+    setShowModeConfirm(true)
+  }
+
+  const confirmModeChange = () => {
+    setGameMode(targetMode)
+    setShowModeConfirm(false)
+    
+    // ゲームをリセット
+    handleReset()
+    
+    // タイムアタックの場合はタイマーをリセット
+    if (targetMode === 'timeattack') {
+      setTimeLeft(60)
+      setIsTimeUp(false)
+    }
+    
+    // ハイスコアを更新
+    setHighScore(loadHighScore(targetMode))
   }
 
   const handleSubmit = () => {
@@ -328,16 +389,22 @@ export function PokemonShiritoriGame() {
       setChain((prev: ChainItem[]) => [...prev, { type: "pokemon", pokemon: newPokemon, points }])
       setUsedNames((prev: Set<string>) => new Set([...prev, inputKatakana]))
       setPokemonHistory(savePokemonHistory(inputKatakana, pokemonHistory))
-      const finalScore = score + points + 10
+      
+      // タイムアタックの場合は残り時間ボーナスを追加
+      const timeBonus = gameMode === 'timeattack' ? timeLeft : 0
+      const finalScore = score + points + 10 + timeBonus
       setScore(finalScore)
       setScoreKey((prev: number) => prev + 1)
-      setHighScore(saveHighScore(finalScore, highScore))
+      setHighScore(saveHighScore(finalScore, highScore, gameMode))
     setCurrentInput("")
     setGameState("cleared")
-    setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt`)
+    const bonusMessage = gameMode === 'timeattack' && timeBonus > 0 
+      ? ` + 時間ボーナス+${timeBonus}pt` 
+      : ""
+    setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt${bonusMessage}`)
     
     // ゲームクリアのトラッキング
-    trackGameClear(score, chain.length)
+    trackGameClear(finalScore, chain.length, gameMode)
     
     setShowResultModal(true)
     return
@@ -433,7 +500,7 @@ export function PokemonShiritoriGame() {
   setCurrentInput("")
 
   // ポケモン回答のトラッキング
-  trackPokemonAnswer()
+  trackPokemonAnswer(inputKatakana)
 
   setIsAnimating(true)
 
@@ -490,12 +557,12 @@ export function PokemonShiritoriGame() {
       setMessage(`💡 ヒント: ${hintPokemon.name} -1pt`)
     } else {
       setMessage(`💡 ヒント: 該当するポケモンが見つかりません。ゲームオーバー`)
-      setHighScore(saveHighScore(score, highScore))
+      setHighScore(saveHighScore(score, highScore, gameMode))
       setGameState("finished")
       setShowEndConfirm(false)
       
       // ゲームオーバーのトラッキング
-      trackGameOver(score, chain.length)
+      trackGameOver(score, chain.length, gameMode)
       
       setShowResultModal(true)
     }
@@ -533,15 +600,21 @@ export function PokemonShiritoriGame() {
     setMessage("")
     setIsAnimating(false)
     setUsedHint(false)
+    
+    // タイムアタックの場合はタイマーをリセット
+    if (gameMode === 'timeattack') {
+      setTimeLeft(60)
+      setIsTimeUp(false)
+    }
   }
 
   const handleFinish = () => {
-    setHighScore(saveHighScore(score, highScore))
+    setHighScore(saveHighScore(score, highScore, gameMode))
     setGameState("finished")
     setShowEndConfirm(false)
     
     // ゲームオーバーのトラッキング
-    trackGameOver(score, chain.length)
+    trackGameOver(score, chain.length, gameMode)
     
     setShowResultModal(true)
   }
@@ -658,6 +731,8 @@ export function PokemonShiritoriGame() {
         <GameHeader
           startPokemon={startPokemon}
           goalPokemon={goalPokemon}
+          gameMode={gameMode}
+          onModeChange={handleModeChange}
           showRules={showRules}
           setShowRules={setShowRules}
           showPokedex={showPokedex}
@@ -684,9 +759,15 @@ export function PokemonShiritoriGame() {
           passesLeft={passesLeft}
           passesKey={passesKey}
           chain={chain}
+          gameMode={gameMode}
         />
 
-        <ChainDisplay chain={chain} chainEndRef={chainEndRef} />
+        <ChainDisplay 
+          chain={chain} 
+          chainEndRef={chainEndRef} 
+          gameMode={gameMode}
+          timeLeft={timeLeft}
+        />
 
         {!showResultModal ? (
           <GameInput
@@ -712,6 +793,7 @@ export function PokemonShiritoriGame() {
           showResultModal={showResultModal}
           setShowResultModal={setShowResultModal}
           gameState={gameState}
+          gameMode={gameMode}
           score={score}
           highScore={highScore}
           chain={chain}
@@ -720,6 +802,8 @@ export function PokemonShiritoriGame() {
           usedHint={usedHint}
           startPokemon={startPokemon}
           goalPokemon={goalPokemon}
+          timeLeft={timeLeft}
+          isTimeUp={isTimeUp}
           handleShareToX={handleShareToX}
           handleReset={handleReset}
         />
@@ -737,6 +821,13 @@ export function PokemonShiritoriGame() {
         <StatsModal
           isOpen={showStats}
           onClose={() => setShowStats(false)}
+        />
+
+        <ModeConfirmModal
+          isOpen={showModeConfirm}
+          onClose={() => setShowModeConfirm(false)}
+          onConfirm={confirmModeChange}
+          targetMode={targetMode}
         />
       </Card>
     </div>
