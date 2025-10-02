@@ -1,13 +1,12 @@
 {
-  "totalPokemonAnswers": 0,
+  "totalPokemonAnswers": 29,
   "totalGameClears": 0,
-  "totalGameOvers": 0,
-  "totalGames": 0,
+  "totalGameOvers": 3,
+  "totalGames": 3,
   "clearRate": 0,
-  "averageAnswersPerGame": 0,
+  "averageAnswersPerGame": 9.666666666666666,
   "maxScore": 0,
   "maxChainLength": 0,
   "serviceStartDate": "2024-01-15",
-  "lastUpdated": "2025-10-02T12:00:00Z",
-  "note": "初期データ - GitHub Actionsで自動更新されます"
+  "lastUpdated": "2025-10-02T08:35:38.905Z"
 }
