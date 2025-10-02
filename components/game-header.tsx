@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import type { Pokemon, GameMode } from "@/lib/types"
+import { CURRENT_VERSION } from "@/lib/version-utils"
 
 interface GameHeaderProps {
   startPokemon: Pokemon
@@ -70,6 +71,14 @@ export function GameHeader({
                 <p className="text-lg font-bold">@GaoGaoPuuun</p>
                 <p className="text-sm text-muted-foreground">フォローしてね！</p>
               </div>
+              
+              {/* バージョン情報 */}
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-muted-foreground">
+                  🎮 ポケしり v{CURRENT_VERSION}
+                </p>
+              </div>
+              
               <Button
                 onClick={() => window.open("https://twitter.com/GaoGaoPuuun", "_blank")}
                 className="w-full bg-black hover:bg-black/90 text-white"
