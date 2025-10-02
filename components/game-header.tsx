@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, HelpCircle, BookOpen } from "lucide-react"
+import { ArrowRight, HelpCircle, BookOpen, BarChart3 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,8 @@ interface GameHeaderProps {
   setShowPokedex: (show: boolean) => void
   showDeveloperInfo: boolean
   setShowDeveloperInfo: (show: boolean) => void
+  showStats: boolean
+  setShowStats: (show: boolean) => void
   displayCaughtCount: number
   totalCount: number
   completionRate: string
@@ -37,6 +39,8 @@ export function GameHeader({
   setShowPokedex,
   showDeveloperInfo,
   setShowDeveloperInfo,
+  showStats,
+  setShowStats,
   displayCaughtCount,
   totalCount,
   completionRate,
@@ -148,6 +152,17 @@ export function GameHeader({
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* 統計ボタン */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="absolute left-10 top-0 h-8 w-8"
+        onClick={() => setShowStats(true)}
+      >
+        <BarChart3 className="h-5 w-5" />
+      </Button>
+      
       <Dialog open={showRules} onOpenChange={setShowRules}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-8 w-8">

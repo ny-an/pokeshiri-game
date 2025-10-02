@@ -36,6 +36,7 @@ import { ChainDisplay } from "./chain-display"
 import { GameInput } from "./game-input"
 import { ResultModal } from "./result-modal"
 import { ProgressModal } from "./progress-modal"
+import { StatsModal } from "./stats-modal"
 
 
 export function PokemonShiritoriGame() {
@@ -71,6 +72,7 @@ export function PokemonShiritoriGame() {
   const [pokemonHistory, setPokemonHistory] = useState<{ [name: string]: number }>({})
   const [showPokedex, setShowPokedex] = useState(false)
   const [showDeveloperInfo, setShowDeveloperInfo] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [progressMilestone, setProgressMilestone] = useState<number | null>(null)
   const [newPokemonName, setNewPokemonName] = useState<string>("")
@@ -270,7 +272,7 @@ export function PokemonShiritoriGame() {
       setShowEndConfirm(false)
       
       // ゲームオーバーのトラッキング
-      trackGameOver()
+      trackGameOver(score, chain.length)
       
       setShowResultModal(true)
     }
@@ -334,7 +336,7 @@ export function PokemonShiritoriGame() {
     setMessage(`🎉 ゴール到達！ +${points}pt + ボーナス+10pt`)
     
     // ゲームクリアのトラッキング
-    trackGameClear()
+    trackGameClear(score, chain.length)
     
     setShowResultModal(true)
     return
@@ -492,7 +494,7 @@ export function PokemonShiritoriGame() {
       setShowEndConfirm(false)
       
       // ゲームオーバーのトラッキング
-      trackGameOver()
+      trackGameOver(score, chain.length)
       
       setShowResultModal(true)
     }
@@ -538,7 +540,7 @@ export function PokemonShiritoriGame() {
     setShowEndConfirm(false)
     
     // ゲームオーバーのトラッキング
-    trackGameOver()
+    trackGameOver(score, chain.length)
     
     setShowResultModal(true)
   }
@@ -654,6 +656,8 @@ export function PokemonShiritoriGame() {
           setShowPokedex={setShowPokedex}
           showDeveloperInfo={showDeveloperInfo}
           setShowDeveloperInfo={setShowDeveloperInfo}
+          showStats={showStats}
+          setShowStats={setShowStats}
           displayCaughtCount={displayCaughtCount}
           totalCount={totalCount}
           completionRate={completionRate}
@@ -720,6 +724,11 @@ export function PokemonShiritoriGame() {
           totalCount={totalCount}
           newPokemon={newPokemonName}
           is100Percent={progressMilestone === 100}
+        />
+
+        <StatsModal
+          isOpen={showStats}
+          onClose={() => setShowStats(false)}
         />
       </Card>
     </div>

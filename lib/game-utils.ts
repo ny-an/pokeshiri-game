@@ -130,15 +130,21 @@ export function trackPokemonAnswer() {
   }
 }
 
-export function trackGameClear() {
+export function trackGameClear(score: number, chainLength: number) {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'game_clear')
+    window.gtag('event', 'game_clear', {
+      'score': score,
+      'chain_length': chainLength
+    })
   }
 }
 
-export function trackGameOver() {
+export function trackGameOver(score: number, chainLength: number) {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'game_over')
+    window.gtag('event', 'game_over', {
+      'score': score,
+      'chain_length': chainLength
+    })
   }
 }
 
