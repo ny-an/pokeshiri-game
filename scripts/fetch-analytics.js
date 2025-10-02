@@ -9,19 +9,42 @@ async function fetchAnalyticsData() {
   try {
     console.log('🔍 Google Analytics データを取得中...');
 
-    // 環境変数からサービスアカウント情報を取得
-    const credentials = {
-      type: 'service_account',
-      project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-      token_uri: 'https://oauth2.googleapis.com/token',
-      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
-      client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.GOOGLE_CLIENT_EMAIL}`,
-    };
+    // サービスアカウントファイルから認証情報を取得
+    let credentials;
+    let propertyId;
+    
+    try {
+      // 環境変数が設定されている場合は環境変数を使用
+      if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GA4_PROPERTY_ID) {
+        credentials = {
+          type: 'service_account',
+          project_id: process.env.GOOGLE_PROJECT_ID,
+          private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          client_email: process.env.GOOGLE_CLIENT_EMAIL,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+          token_uri: 'https://oauth2.googleapis.com/token',
+          auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+          client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.GOOGLE_CLIENT_EMAIL}`,
+        };
+        propertyId = process.env.GA4_PROPERTY_ID;
+        console.log('📋 環境変数から認証情報を取得しました');
+      } else {
+        // ローカル開発環境ではサービスアカウントファイルを使用
+        const credentialsPath = path.join(process.cwd(), 'credentials', 'service-account.json');
+        credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+        
+        // GA4設定ファイルからプロパティIDを取得
+        const ga4ConfigPath = path.join(process.cwd(), 'credentials', 'ga4-config.json');
+        const ga4Config = JSON.parse(fs.readFileSync(ga4ConfigPath, 'utf8'));
+        propertyId = ga4Config.propertyId;
+        console.log('📋 サービスアカウントファイルから認証情報を取得しました');
+        console.log(`📊 GA4プロパティID: ${propertyId}`);
+      }
+    } catch (fileError) {
+      throw new Error(`認証情報の取得に失敗しました: ${fileError.message}`);
+    }
 
     // 認証設定
     const auth = new google.auth.GoogleAuth({
@@ -31,8 +54,6 @@ async function fetchAnalyticsData() {
 
     const authClient = await auth.getClient();
     google.options({ auth: authClient });
-
-    const propertyId = process.env.GA4_PROPERTY_ID;
 
     if (!propertyId) {
       throw new Error('GA4_PROPERTY_ID が設定されていません');
@@ -87,6 +108,8 @@ async function fetchAnalyticsData() {
       maxScoreTA: 0, // タイムアタックモードの最高スコア
       maxChainLength: 0, // シングルモードの最長チェーン（後方互換性のため残す）
       maxChainLengthTA: 0, // タイムアタックモードの最長チェーン
+      mostUsedPokemon: null, // 最も使用されたPokemon名
+      mostUsedPokemonCount: 0, // その使用回数
       serviceStartDate: startDate,
       lastUpdated: new Date().toISOString(),
     };
@@ -120,66 +143,34 @@ async function fetchAnalyticsData() {
       ? stats.totalPokemonAnswers / stats.totalGames
       : 0;
 
-    // カスタムディメンション・指標を使ってモード別の最高スコア・最長チェーンを取得
+    // モード別カスタム指標を使って最高スコア・最長チェーンを取得
     try {
-      // シングルモードの最高スコア・最長チェーンを取得
-      const singleModeResponse = await analyticsdata.properties.runReport({
+      console.log('🔍 モード別カスタム指標の取得を開始...');
+      
+      // モード別の最高記録を一度に取得
+      const modeSpecificResponse = await analyticsdata.properties.runReport({
         property: `properties/${propertyId}`,
         requestBody: {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
-          dimensions: [
-            { name: 'customEvent:game_mode' }
-          ],
           metrics: [
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            { name: 'customEvent:score_single' },
+            { name: 'customEvent:score_timeattack' },
+            { name: 'customEvent:chain_length_single' },
+            { name: 'customEvent:chain_length_timeattack' }
           ],
-          dimensionFilter: {
-            filter: {
-              fieldName: 'customEvent:game_mode',
-              stringFilter: { value: 'single' }
-            }
-          },
-          metricAggregations: ['MAXIMUM'],
-          limit: 1
+          metricAggregations: ['MAXIMUM']
         }
       });
+      
+      console.log('📋 モード別指標レスポンス:', JSON.stringify(modeSpecificResponse.data, null, 2));
 
-      // タイムアタックモードの最高スコア・最長チェーンを取得
-      const timeattackModeResponse = await analyticsdata.properties.runReport({
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [{ startDate: startDate, endDate: endDate }],
-          dimensions: [
-            { name: 'customEvent:game_mode' }
-          ],
-          metrics: [
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
-          ],
-          dimensionFilter: {
-            filter: {
-              fieldName: 'customEvent:game_mode',
-              stringFilter: { value: 'timeattack' }
-            }
-          },
-          metricAggregations: ['MAXIMUM'],
-          limit: 1
-        }
-      });
-
-      // シングルモードの結果を処理
-      if (singleModeResponse.data.rows && singleModeResponse.data.rows.length > 0) {
-        const row = singleModeResponse.data.rows[0];
-        stats.maxScore = parseInt(row.metricValues?.[0]?.value || '0');
-        stats.maxChainLength = parseInt(row.metricValues?.[1]?.value || '0');
-      }
-
-      // タイムアタックモードの結果を処理
-      if (timeattackModeResponse.data.rows && timeattackModeResponse.data.rows.length > 0) {
-        const row = timeattackModeResponse.data.rows[0];
-        stats.maxScoreTA = parseInt(row.metricValues?.[0]?.value || '0');
-        stats.maxChainLengthTA = parseInt(row.metricValues?.[1]?.value || '0');
+      // 結果を処理
+      if (modeSpecificResponse.data.maximums && modeSpecificResponse.data.maximums.length > 0) {
+        const maximums = modeSpecificResponse.data.maximums[0];
+        stats.maxScore = parseInt(maximums.metricValues?.[0]?.value || '0');
+        stats.maxScoreTA = parseInt(maximums.metricValues?.[1]?.value || '0');
+        stats.maxChainLength = parseInt(maximums.metricValues?.[2]?.value || '0');
+        stats.maxChainLengthTA = parseInt(maximums.metricValues?.[3]?.value || '0');
       }
 
       console.log(`📊 モード別最高記録:`);
@@ -191,11 +182,93 @@ async function fetchAnalyticsData() {
     } catch (customError) {
       console.warn('⚠️ カスタムディメンション・指標の取得に失敗:', customError.message);
       console.log('💡 カスタムディメンション・指標が正しく設定されていない可能性があります');
+      console.log('📋 GA4設定ガイド: docs/development/ga4-setup-guide.md を参照してください');
+      
+      // エラー情報をstatsに追加
+      stats.error = `カスタムディメンション・指標の取得に失敗: ${customError.message}`;
+      
       // カスタムディメンション取得失敗時はデフォルト値を維持
       stats.maxScore = 0;
       stats.maxScoreTA = 0;
       stats.maxChainLength = 0;
       stats.maxChainLengthTA = 0;
+    }
+
+    // 最も使用されたPokemon名の統計を取得
+    console.log('🔍 Pokemon使用統計を取得中...');
+    try {
+      const pokemonStatsResponse = await analyticsdata.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate: startDate, endDate: endDate }],
+          dimensions: [
+            { name: 'customEvent:pokemon_name' }
+          ],
+          metrics: [
+            { name: 'eventCount' }
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'eventName',
+              stringFilter: { value: 'pokemon_answer' }
+            }
+          },
+          orderBys: [
+            {
+              metric: { metricName: 'eventCount' },
+              desc: true
+            }
+          ],
+          limit: 10
+        }
+      });
+      
+      console.log('📋 Pokemon使用統計:', JSON.stringify(pokemonStatsResponse.data, null, 2));
+      
+      // 最も使用されたPokemon名を統計に追加
+      if (pokemonStatsResponse.data.rows && pokemonStatsResponse.data.rows.length > 0) {
+        const topPokemon = pokemonStatsResponse.data.rows[0];
+        const pokemonName = topPokemon.dimensionValues?.[0]?.value;
+        const usageCount = parseInt(topPokemon.metricValues?.[0]?.value || '0');
+        
+        if (pokemonName && pokemonName !== '(not set)') {
+          stats.mostUsedPokemon = pokemonName;
+          stats.mostUsedPokemonCount = usageCount;
+          console.log(`🏆 最も使用されたPokemon: ${pokemonName} (${usageCount}回)`);
+        }
+      }
+    } catch (pokemonError) {
+      console.warn('⚠️ Pokemon統計取得でエラー:', pokemonError.message);
+    }
+
+    // 実際に送信されているイベントパラメータを確認
+    console.log('🔍 実際のイベントパラメータを確認中...');
+    try {
+      const eventParamsResponse = await analyticsdata.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate: startDate, endDate: endDate }],
+          dimensions: [
+            { name: 'eventName' }
+          ],
+          metrics: [
+            { name: 'eventCount' }
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'eventName',
+              inListFilter: {
+                values: ['game_clear', 'game_over', 'pokemon_answer']
+              }
+            }
+          },
+          limit: 10
+        }
+      });
+      
+      console.log('📋 イベント一覧:', JSON.stringify(eventParamsResponse.data, null, 2));
+    } catch (eventError) {
+      console.warn('⚠️ イベント確認でエラー:', eventError.message);
     }
 
     console.log('📊 取得した統計データ:');

@@ -26,7 +26,7 @@ export function ModeConfirmModal({ isOpen, onClose, onConfirm, targetMode }: Mod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>モード変更確認</DialogTitle>
           <DialogDescription className="text-center py-4">

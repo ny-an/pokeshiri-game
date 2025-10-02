@@ -243,7 +243,7 @@ export function ProgressModal({
       )}
 
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">
               {getProgressEmoji(progress)} 図鑑進捗達成！

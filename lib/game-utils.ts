@@ -133,31 +133,53 @@ export function getMaskedName(name: string): string {
 // Gtagイベント送信関数
 export function trackPokemonAnswer(pokemonName?: string) {
   if (typeof window !== 'undefined' && window.gtag) {
-    const eventData: any = {}
-    if (pokemonName) {
-      eventData.pokemon_name = pokemonName
-    }
-    window.gtag('event', 'pokemon_answer', eventData)
+    const eventData: any = {
+      pokemon_name: pokemonName || 'unknown'
+    };
+    console.log('🐾 Sending pokemon_answer event:', eventData);
+    window.gtag('event', 'pokemon_answer', eventData);
+  } else {
+    console.warn('⚠️ gtag not available for pokemon_answer event');
   }
 }
 
 export function trackGameClear(score: number, chainLength: number, gameMode: GameMode = "single") {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'game_clear', {
+    const eventData = {
+      // モード別カスタム指標
+      'score_single': gameMode === 'single' ? score : 0,
+      'score_timeattack': gameMode === 'timeattack' ? score : 0,
+      'chain_length_single': gameMode === 'single' ? chainLength : 0,
+      'chain_length_timeattack': gameMode === 'timeattack' ? chainLength : 0,
+      // 従来のパラメータも保持（互換性のため）
       'score': score,
       'chain_length': chainLength,
       'game_mode': gameMode
-    })
+    };
+    console.log('🎉 Sending game_clear event (mode-specific):', eventData);
+    window.gtag('event', 'game_clear', eventData);
+  } else {
+    console.warn('⚠️ gtag not available for game_clear event');
   }
 }
 
 export function trackGameOver(score: number, chainLength: number, gameMode: GameMode = "single") {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'game_over', {
+    const eventData = {
+      // モード別カスタム指標
+      'score_single': gameMode === 'single' ? score : 0,
+      'score_timeattack': gameMode === 'timeattack' ? score : 0,
+      'chain_length_single': gameMode === 'single' ? chainLength : 0,
+      'chain_length_timeattack': gameMode === 'timeattack' ? chainLength : 0,
+      // 従来のパラメータも保持（互換性のため）
       'score': score,
       'chain_length': chainLength,
       'game_mode': gameMode
-    })
+    };
+    console.log('💥 Sending game_over event (mode-specific):', eventData);
+    window.gtag('event', 'game_over', eventData);
+  } else {
+    console.warn('⚠️ gtag not available for game_over event');
   }
 }
 

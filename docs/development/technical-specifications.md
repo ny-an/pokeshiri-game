@@ -291,6 +291,48 @@ node scripts/fetch-analytics.js
    - useEffectの依存配列確認
    - コンポーネントアンマウント時の処理確認
 
+## 更新履歴
+
+### v2.1 - 2025年10月2日
+#### iPhoneSE対応・モーダル表示改善
+**問題**: iPhoneSEサイズの画面でモーダルが操作できない問題
+- 画面サイズを超えるモーダルでスクロールできない
+- 閉じるボタンが押せない状態になる
+
+**対応内容**:
+1. **DialogContentコンポーネント基本修正**
+   - `max-h-[calc(100vh-2rem)]` 追加（画面高さ制限）
+   - `overflow-y-auto` 追加（スクロール対応）
+   - 閉じるボタンに `z-10` 追加（常時操作可能）
+
+2. **全モーダルの個別対応**
+   - ルール説明モーダル: `max-h-[90vh]` + sticky header
+   - 結果モーダル: `max-h-[90vh] overflow-y-auto`
+   - モード確認モーダル: `max-h-[90vh] overflow-y-auto`
+   - バージョンチェッカー: `max-h-[90vh] overflow-y-auto`
+   - 進捗モーダル: `max-h-[90vh] overflow-y-auto`
+   - 開発者情報モーダル: `max-h-[90vh] overflow-y-auto`
+   - ポケモン図鑑モーダル: `max-h-[90vh] overflow-y-auto`
+   - 統計モーダル: `max-h-[90vh] overflow-y-auto`
+   - ゲーム終了確認モーダル: `max-h-[90vh] overflow-y-auto`
+
+3. **技術的改善**
+   - JSX構文エラーの修正
+   - インデント統一
+   - レスポンシブ対応強化
+
+**影響範囲**: 
+- `components/ui/dialog.tsx`
+- `components/game-header.tsx`
+- `components/result-modal.tsx`
+- `components/mode-confirm-modal.tsx`
+- `components/version-checker.tsx`
+- `components/progress-modal.tsx`
+- `components/game-input.tsx`
+- `components/stats-modal.tsx`
+
+**テスト**: iPhoneSE (375×667px) での動作確認済み
+
 ## 今後の拡張予定
 
 ### 機能拡張
@@ -303,10 +345,10 @@ node scripts/fetch-analytics.js
 - [ ] TypeScript strict mode対応
 - [ ] テストカバレッジ向上
 - [ ] パフォーマンス最適化
-- [ ] アクセシビリティ向上
+- [x] アクセシビリティ向上（モバイル対応完了）
 
 ---
 
 **更新日**: 2025年10月2日  
-**バージョン**: 2.0  
+**バージョン**: 2.1  
 **作成者**: 開発チーム

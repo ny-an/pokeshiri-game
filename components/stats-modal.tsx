@@ -124,7 +124,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
   if (error || !stats) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               ⚠️ エラー
@@ -334,8 +334,12 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
               
               {stats.error && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
-                    ⚠️ 一部のデータ取得でエラーが発生しました: {stats.error}
+                  <p className="text-yellow-800 text-sm font-medium mb-2">
+                    ⚠️ 記録統計の取得でエラーが発生しました
+                  </p>
+                  <p className="text-yellow-700 text-xs">
+                    Google Analytics 4のカスタムディメンション・指標が未設定の可能性があります。
+                    詳細は開発者にお問い合わせください。
                   </p>
                 </div>
               )}
@@ -412,7 +416,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             {/* シングルモード最高得点 */}
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <div className="text-lg font-bold text-blue-600">
-                {stats.maxScore > 0 ? stats.maxScore.toLocaleString() : '記録なし'}
+                {stats.maxScore > 0 ? stats.maxScore.toLocaleString() : (stats.error ? '設定未完了' : '記録なし')}
               </div>
               <div className="text-xs text-blue-800 font-medium">
                 シングル最高得点
@@ -425,7 +429,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             {/* タイムアタック最高得点 */}
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <div className="text-lg font-bold text-yellow-600">
-                {stats.maxScoreTA > 0 ? stats.maxScoreTA.toLocaleString() : '記録なし'}
+                {stats.maxScoreTA > 0 ? stats.maxScoreTA.toLocaleString() : (stats.error ? '設定未完了' : '記録なし')}
               </div>
               <div className="text-xs text-yellow-800 font-medium">
                 TA最高得点
@@ -438,7 +442,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             {/* 最長回答（シングル） */}
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="text-lg font-bold text-orange-600">
-                {stats.maxChainLength > 0 ? stats.maxChainLength : '記録なし'}
+                {stats.maxChainLength > 0 ? stats.maxChainLength : (stats.error ? '設定未完了' : '記録なし')}
               </div>
               <div className="text-xs text-orange-800 font-medium">
                 シングル最長チェーン
@@ -448,13 +452,26 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             {/* 最長回答（タイムアタック） */}
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <div className="text-lg font-bold text-purple-600">
-                {stats.maxChainLengthTA > 0 ? stats.maxChainLengthTA : '記録なし'}
+                {stats.maxChainLengthTA > 0 ? stats.maxChainLengthTA : (stats.error ? '設定未完了' : '記録なし')}
               </div>
               <div className="text-xs text-purple-800 font-medium">
                 TA最長チェーン
               </div>
                   </div>
                 </div>
+                
+                {/* 記録統計のエラーメッセージ */}
+                {stats.error && (
+                  <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-orange-800 text-sm font-medium mb-1">
+                      📊 記録統計について
+                    </p>
+                    <p className="text-orange-700 text-xs">
+                      現在、Google Analytics 4の設定が未完了のため、全プレイヤーの最高記録を表示できません。
+                      個人記録は正常に表示されています。
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

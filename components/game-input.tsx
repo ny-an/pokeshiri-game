@@ -99,7 +99,7 @@ export function GameInput({
               終了
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-sm">
+          <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>ゲームを終了しますか？</DialogTitle>
               <DialogDescription>現在のスコア: {score}pt</DialogDescription>

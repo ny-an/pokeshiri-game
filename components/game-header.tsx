@@ -61,7 +61,7 @@ export function GameHeader({
           <DialogTrigger asChild>
             <button className="hover:scale-110 transition-transform inline-block">🥹</button>
           </DialogTrigger>
-          <DialogContent className="max-w-sm">
+          <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-center">開発者情報</DialogTitle>
             </DialogHeader>
@@ -118,7 +118,7 @@ export function GameHeader({
             <BookOpen className="h-5 w-5" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
             <DialogTitle>ポケモン図鑑</DialogTitle>
             <DialogDescription>
@@ -204,50 +204,50 @@ export function GameHeader({
             <HelpCircle className="h-5 w-5" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>ゲームルール</DialogTitle>
-            <DialogDescription asChild>
-              <div className="space-y-3 text-sm text-left">
-                <div>
-                  <h4 className="font-semibold mb-1">基本ルール</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>スタートからゴールまでしりとりでつなぐ</li>
-                    <li>ポケモン名が「ー」で終わる場合、その前の文字を使用</li>
-                    <li>濁音・半濁音は清音でもOK（例：チ↔ヂ）</li>
-                    <li className="font-bold text-primary">✅ ひらがな入力OK</li>
-                    <li className="font-bold text-primary">✅ 「ん」で終わってもOK（自動チェンジ）</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">得点システム</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>基本：+1pt</li>
-                    <li>タイプ一致コンボ：連鎖数×1pt（1連鎖=1pt、2連鎖=2pt、3連鎖=3pt...）</li>
-                    <li>ゴール到達：+10pt</li>
-                    <li>任意チェンジ：-2pt（最大3回、コンボリセット）</li>
-                    <li>重複使用：-5pt（コンボリセット）</li>
-                    <li>ヒント：-1pt（ポケモン名を1つ表示）</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">タイプ一致コンボ</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>前のポケモンとタイプが1つでも同じ場合、コンボ継続</li>
-                    <li>コンボが続くほど高得点（例：4連鎖目は+4pt）</li>
-                    <li>タイプ不一致でコンボリセット</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">自動チェンジ</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>「ン」で終わる場合、自動的にランダムな文字に変更</li>
-                    <li>ペナルティなし</li>
-                  </ul>
-                </div>
-              </div>
-            </DialogDescription>
           </DialogHeader>
+          <DialogDescription asChild>
+            <div className="space-y-3 text-sm text-left pb-4">
+              <div>
+                <h4 className="font-semibold mb-1">基本ルール</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>スタートからゴールまでしりとりでつなぐ</li>
+                  <li>ポケモン名が「ー」で終わる場合、その前の文字を使用</li>
+                  <li>濁音・半濁音は清音でもOK（例：チ↔ヂ）</li>
+                  <li className="font-bold text-primary">✅ ひらがな入力OK</li>
+                  <li className="font-bold text-primary">✅ 「ん」で終わってもOK（自動チェンジ）</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">得点システム</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>基本：+1pt</li>
+                  <li>タイプ一致コンボ：連鎖数×1pt（1連鎖=1pt、2連鎖=2pt、3連鎖=3pt...）</li>
+                  <li>ゴール到達：+10pt</li>
+                  <li>任意チェンジ：-2pt（最大3回、コンボリセット）</li>
+                  <li>重複使用：-5pt（コンボリセット）</li>
+                  <li>ヒント：-1pt（ポケモン名を1つ表示）</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">タイプ一致コンボ</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>前のポケモンとタイプが1つでも同じ場合、コンボ継続</li>
+                  <li>コンボが続くほど高得点（例：4連鎖目は+4pt）</li>
+                  <li>タイプ不一致でコンボリセット</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">自動チェンジ</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>「ン」で終わる場合、自動的にランダムな文字に変更</li>
+                  <li>ペナルティなし</li>
+                </ul>
+              </div>
+            </div>
+          </DialogDescription>
         </DialogContent>
       </Dialog>
 

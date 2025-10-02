@@ -65,7 +65,7 @@ export function ResultModal({
   }
   return (
     <Dialog open={showResultModal} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md" showCloseButton={false}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">
             {getTitle()}
