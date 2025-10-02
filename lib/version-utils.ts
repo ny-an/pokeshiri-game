@@ -5,7 +5,14 @@
 /**
  * アプリケーションの現在のバージョン（ハードコード）
  */
-export const CURRENT_VERSION = "0.1.0"
+export const CURRENT_VERSION = "1.0.0"
+
+/**
+ * 現在のバージョンを取得する関数
+ */
+export function getCurrentVersion(): Promise<string> {
+  return Promise.resolve(CURRENT_VERSION)
+}
 
 /**
  * バージョン情報ファイルのURL

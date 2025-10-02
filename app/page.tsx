@@ -1,4 +1,5 @@
 import { PokemonShiritoriGame } from "@/components/pokemon-shiritori-game"
+import { VersionLogger } from "@/components/version-logger"
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
+      <VersionLogger />
       <PokemonShiritoriGame />
     </main>
   )
