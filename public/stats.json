@@ -1,10 +1,10 @@
 {
-  "totalPokemonAnswers": 116,
+  "totalPokemonAnswers": 122,
   "totalGameClears": 3,
   "totalGameOvers": 16,
   "totalGames": 19,
   "clearRate": 15.789473684210526,
-  "averageAnswersPerGame": 6.105263157894737,
+  "averageAnswersPerGame": 6.421052631578948,
   "maxScore": 0,
   "maxScoreTA": 0,
   "maxChainLength": 0,
@@ -12,5 +12,5 @@
   "mostUsedPokemon": null,
   "mostUsedPokemonCount": 0,
   "serviceStartDate": "2024-01-15",
-  "lastUpdated": "2025-10-02T13:49:52.310Z"
+  "lastUpdated": "2025-10-02T15:13:41.625Z"
 }
