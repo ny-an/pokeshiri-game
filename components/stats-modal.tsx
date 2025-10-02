@@ -156,127 +156,95 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
         </DialogHeader>
         
         <div className="space-y-6 p-1">
-          {/* メイン統計カード */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* メイン統計カード - 1行2項目表示 */}
+          <div className="grid grid-cols-2 gap-3">
             {/* 総回答数 */}
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="text-xl font-bold text-blue-600">
                 {stats.totalPokemonAnswers.toLocaleString()}
               </div>
-              <div className="text-sm text-blue-800 font-medium">
+              <div className="text-xs text-blue-800 font-medium">
                 総回答数
               </div>
-              <Badge variant="secondary" className="mt-2">
-                🎯 回答
-              </Badge>
             </div>
 
             {/* クリア数 */}
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-xl font-bold text-green-600">
                 {stats.totalGameClears.toLocaleString()}
               </div>
-              <div className="text-sm text-green-800 font-medium">
+              <div className="text-xs text-green-800 font-medium">
                 クリア数
               </div>
-              <Badge variant="secondary" className="mt-2">
-                🏆 成功
-              </Badge>
             </div>
 
             {/* ゲームオーバー数 */}
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="text-xl font-bold text-red-600">
                 {stats.totalGameOvers.toLocaleString()}
               </div>
-              <div className="text-sm text-red-800 font-medium">
+              <div className="text-xs text-red-800 font-medium">
                 オーバー数
               </div>
-              <Badge variant="secondary" className="mt-2">
-                💥 失敗
-              </Badge>
             </div>
 
             {/* 成功率 */}
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-xl font-bold text-purple-600">
                 {stats.clearRate.toFixed(1)}%
               </div>
-              <div className="text-sm text-purple-800 font-medium">
+              <div className="text-xs text-purple-800 font-medium">
                 成功率
               </div>
-              <Badge variant="secondary" className="mt-2">
-                📈 率
-              </Badge>
             </div>
           </div>
 
-          {/* 記録統計 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 記録統計 - 1行2項目表示 */}
+          <div className="grid grid-cols-2 gap-3">
             {/* シングルモード最高得点 */}
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="text-lg font-bold text-blue-600">
                 {stats.maxScore > 0 ? stats.maxScore.toLocaleString() : '記録なし'}
               </div>
-              <div className="text-sm text-blue-800 font-medium">
+              <div className="text-xs text-blue-800 font-medium">
                 シングル最高得点
               </div>
               {myHighScoreSingle > 0 && myHighScoreSingle >= stats.maxScore && (
-                <Badge variant="default" className="mt-2 bg-blue-600">
-                  🏆 あなたの記録です
-                </Badge>
-              )}
-              {(!myHighScoreSingle || myHighScoreSingle < stats.maxScore) && stats.maxScore > 0 && (
-                <Badge variant="secondary" className="mt-2">
-                  ⭐ 累計記録
-                </Badge>
+                <div className="text-xs text-blue-600 mt-1">🏆 あなたの記録</div>
               )}
             </div>
 
             {/* タイムアタック最高得点 */}
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-center p-3 bg-yellow-50 rounded-lg">
+              <div className="text-lg font-bold text-yellow-600">
                 {stats.maxScoreTA > 0 ? stats.maxScoreTA.toLocaleString() : '記録なし'}
               </div>
-              <div className="text-sm text-yellow-800 font-medium">
+              <div className="text-xs text-yellow-800 font-medium">
                 TA最高得点
               </div>
               {myHighScoreTimeattack > 0 && myHighScoreTimeattack >= stats.maxScoreTA && (
-                <Badge variant="default" className="mt-2 bg-yellow-600">
-                  🏆 あなたの記録です
-                </Badge>
-              )}
-              {(!myHighScoreTimeattack || myHighScoreTimeattack < stats.maxScoreTA) && stats.maxScoreTA > 0 && (
-                <Badge variant="secondary" className="mt-2">
-                  ⚡ 累計記録
-                </Badge>
+                <div className="text-xs text-yellow-600 mt-1">🏆 あなたの記録</div>
               )}
             </div>
 
             {/* 最長回答（シングル） */}
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <div className="text-lg font-bold text-orange-600">
                 {stats.maxChainLength > 0 ? stats.maxChainLength : '記録なし'}
               </div>
-              <div className="text-sm text-orange-800 font-medium">
+              <div className="text-xs text-orange-800 font-medium">
                 シングル最長回答
               </div>
-              <Badge variant="secondary" className="mt-2">
-                🔥 連続
-              </Badge>
             </div>
 
             {/* 最長回答（タイムアタック） */}
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-lg font-bold text-purple-600">
                 {stats.maxChainLengthTA > 0 ? stats.maxChainLengthTA : '記録なし'}
               </div>
-              <div className="text-sm text-purple-800 font-medium">
+              <div className="text-xs text-purple-800 font-medium">
                 TA最長回答
               </div>
-              <Badge variant="secondary" className="mt-2">
-                ⚡ 連続
-              </Badge>
             </div>
           </div>
 
@@ -292,81 +260,109 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* 個人統計メイン */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 個人統計メイン - 1行2項目表示 */}
+                <div className="grid grid-cols-2 gap-3">
                   {/* 個人クリア数 */}
-                  <div className="text-center p-4 bg-emerald-50 rounded-lg">
-                    <div className="text-2xl font-bold text-emerald-600">
+                  <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                    <div className="text-xl font-bold text-emerald-600">
                       {personalStats.totalGameClears.toLocaleString()}
                     </div>
-                    <div className="text-sm text-emerald-800 font-medium">
+                    <div className="text-xs text-emerald-800 font-medium">
                       クリア数
                     </div>
-                    <Badge variant="secondary" className="mt-2">
-                      ✅ 成功
-                    </Badge>
                   </div>
 
                   {/* 総回答数 */}
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">
                       {personalStats.totalAnswers.toLocaleString()}
                     </div>
-                    <div className="text-sm text-blue-800 font-medium">
+                    <div className="text-xs text-blue-800 font-medium">
                       総回答数
                     </div>
-                    <Badge variant="secondary" className="mt-2">
-                      🎯 回答
-                    </Badge>
                   </div>
                 </div>
 
-                {/* 個人記録詳細 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 個人記録詳細 - 1行2項目表示 */}
+                <div className="grid grid-cols-2 gap-3">
                   {/* シングルモード記録 */}
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-xl font-bold text-blue-600">
-                      {personalStats.bestSingleScore.toLocaleString()} pt
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-lg font-bold text-blue-600">
+                      {personalStats.bestSingleScore.toLocaleString()}
                     </div>
-                    <div className="text-sm text-blue-800 font-medium">
+                    <div className="text-xs text-blue-800 font-medium">
                       シングル最高得点
-                    </div>
-                    <div className="text-xs text-blue-600 mt-1">
-                      最長: {personalStats.longestChainSingle} 回答
                     </div>
                   </div>
 
                   {/* タイムアタック記録 */}
-                  <div className="text-center p-4 bg-amber-50 rounded-lg">
-                    <div className="text-xl font-bold text-amber-600">
-                      {personalStats.bestTimeattackScore.toLocaleString()} pt
+                  <div className="text-center p-3 bg-amber-50 rounded-lg">
+                    <div className="text-lg font-bold text-amber-600">
+                      {personalStats.bestTimeattackScore.toLocaleString()}
                     </div>
-                    <div className="text-sm text-amber-800 font-medium">
+                    <div className="text-xs text-amber-800 font-medium">
                       TA最高得点
                     </div>
-                    <div className="text-xs text-amber-600 mt-1">
-                      最長: {personalStats.longestChainTimeattack} 回答
+                  </div>
+
+                  {/* シングル最長チェーン */}
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-lg font-bold text-green-600">
+                      {personalStats.longestChainSingle}
+                    </div>
+                    <div className="text-xs text-green-800 font-medium">
+                      シングル最長
+                    </div>
+                  </div>
+
+                  {/* TA最長チェーン */}
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg font-bold text-purple-600">
+                      {personalStats.longestChainTimeattack}
+                    </div>
+                    <div className="text-xs text-purple-800 font-medium">
+                      TA最長
+                    </div>
+                  </div>
+
+                  {/* シングル最高コンボ */}
+                  <div className="text-center p-3 bg-orange-50 rounded-lg">
+                    <div className="text-lg font-bold text-orange-600">
+                      {personalStats.maxComboSingle || 0}
+                    </div>
+                    <div className="text-xs text-orange-800 font-medium">
+                      シングル最高コンボ
+                    </div>
+                  </div>
+
+                  {/* TA最高コンボ */}
+                  <div className="text-center p-3 bg-pink-50 rounded-lg">
+                    <div className="text-lg font-bold text-pink-600">
+                      {personalStats.maxComboTimeattack || 0}
+                    </div>
+                    <div className="text-xs text-pink-800 font-medium">
+                      TA最高コンボ
                     </div>
                   </div>
                 </div>
 
-                {/* 個人統計詳細 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex justify-between">
+                {/* 個人統計詳細 - 1行2項目表示 */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex justify-between bg-gray-50 p-2 rounded">
                     <span className="text-gray-600">遊んだゲーム数:</span>
-                    <span className="font-medium">{personalStats.totalGamesPlayed.toLocaleString()} ゲーム</span>
+                    <span className="font-medium">{personalStats.totalGamesPlayed.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">平均回答数/ゲーム:</span>
-                    <span className="font-medium">{personalStats.averageAnswersPerGame.toFixed(1)} 回</span>
+                  <div className="flex justify-between bg-gray-50 p-2 rounded">
+                    <span className="text-gray-600">平均回答数:</span>
+                    <span className="font-medium">{personalStats.averageAnswersPerGame.toFixed(1)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">シングルモード:</span>
-                    <span className="font-medium">{personalStats.singleModeGames.toLocaleString()} ゲーム</span>
+                  <div className="flex justify-between bg-blue-50 p-2 rounded">
+                    <span className="text-blue-600">シングル:</span>
+                    <span className="font-medium text-blue-800">{personalStats.singleModeGames.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">タイムアタック:</span>
-                    <span className="font-medium">{personalStats.timeattackModeGames.toLocaleString()} ゲーム</span>
+                  <div className="flex justify-between bg-amber-50 p-2 rounded">
+                    <span className="text-amber-600">タイムアタック:</span>
+                    <span className="font-medium text-amber-800">{personalStats.timeattackModeGames.toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>
@@ -381,22 +377,22 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex justify-between bg-gray-50 p-2 rounded">
                   <span className="text-gray-600">総ゲーム数:</span>
-                  <span className="font-medium">{stats.totalGames.toLocaleString()} ゲーム</span>
+                  <span className="font-medium">{stats.totalGames.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">平均回答数/ゲーム:</span>
-                  <span className="font-medium">{stats.averageAnswersPerGame.toFixed(1)} 回</span>
+                <div className="flex justify-between bg-gray-50 p-2 rounded">
+                  <span className="text-gray-600">平均回答数:</span>
+                  <span className="font-medium">{stats.averageAnswersPerGame.toFixed(1)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">サービス開始:</span>
-                  <span className="font-medium">{formatServiceDate(stats.serviceStartDate)}</span>
+                <div className="flex justify-between bg-blue-50 p-2 rounded">
+                  <span className="text-blue-600">サービス開始:</span>
+                  <span className="font-medium text-blue-800">{formatServiceDate(stats.serviceStartDate)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">データ更新間隔:</span>
-                  <span className="font-medium">3時間ごと</span>
+                <div className="flex justify-between bg-green-50 p-2 rounded">
+                  <span className="text-green-600">更新間隔:</span>
+                  <span className="font-medium text-green-800">3時間ごと</span>
                 </div>
               </div>
               

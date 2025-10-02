@@ -54,9 +54,10 @@
 - ゲーム履歴の表示
 - **個人統計機能**: 自分のプレイ記録を詳細管理
   - 遊んだゲーム数、クリア数、総回答数
-  - モード別最高得点・最長チェーン数
+  - モード別最高得点・最長チェーン数・最高コンボ数
   - 平均回答数/ゲーム、モード別プレイ回数
   - ローカルストレージで永続化
+  - スマホ対応の1行2項目表示でコンパクト化
 - レスポンシブデザイン
 - PWA対応
 
@@ -152,10 +153,12 @@ pnpm dev
   - `totalAnswers`: 総回答数
   - `bestSingleScore` / `bestTimeattackScore`: モード別最高得点
   - `longestChainSingle` / `longestChainTimeattack`: モード別最長チェーン
+  - `maxComboSingle` / `maxComboTimeattack`: モード別最高コンボ数
   - `singleModeGames` / `timeattackModeGames`: モード別プレイ回数
   - `averageAnswersPerGame`: 平均回答数/ゲーム
 - **自動更新**: ゲーム開始・終了時に統計を自動更新
 - **表示**: 統計モーダルで累計データと分離して表示
+- **UI改善**: スマホ表示対応の1行2項目レイアウトでコンパクト化
 
 ## ビルド
 

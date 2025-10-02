@@ -25,6 +25,8 @@ export interface PersonalStats {
   bestTimeattackScore: number
   longestChainSingle: number
   longestChainTimeattack: number
+  maxComboSingle: number
+  maxComboTimeattack: number
   firstPlayDate: string
   lastPlayDate: string
 }

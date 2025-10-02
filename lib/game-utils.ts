@@ -219,6 +219,8 @@ export function loadPersonalStats(): PersonalStats {
     bestTimeattackScore: 0,
     longestChainSingle: 0,
     longestChainTimeattack: 0,
+    maxComboSingle: 0,
+    maxComboTimeattack: 0,
     firstPlayDate: new Date().toISOString(),
     lastPlayDate: new Date().toISOString()
   }
@@ -257,7 +259,8 @@ export function updateStatsOnGameEnd(
   isCleared: boolean, 
   score: number, 
   chainLength: number, 
-  totalAnswers: number
+  totalAnswers: number,
+  maxCombo: number = 0
 ): PersonalStats {
   const stats = loadPersonalStats()
   
@@ -269,7 +272,7 @@ export function updateStatsOnGameEnd(
     stats.totalGameOvers++
   }
   
-  // 最高スコアと最長チェーンの更新
+  // 最高スコア、最長チェーン、最高コンボの更新
   if (gameMode === "single") {
     if (score > stats.bestSingleScore) {
       stats.bestSingleScore = score
@@ -277,12 +280,18 @@ export function updateStatsOnGameEnd(
     if (chainLength > stats.longestChainSingle) {
       stats.longestChainSingle = chainLength
     }
+    if (maxCombo > stats.maxComboSingle) {
+      stats.maxComboSingle = maxCombo
+    }
   } else {
     if (score > stats.bestTimeattackScore) {
       stats.bestTimeattackScore = score
     }
     if (chainLength > stats.longestChainTimeattack) {
       stats.longestChainTimeattack = chainLength
+    }
+    if (maxCombo > stats.maxComboTimeattack) {
+      stats.maxComboTimeattack = maxCombo
     }
   }
   
