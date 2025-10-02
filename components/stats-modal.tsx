@@ -156,6 +156,143 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
         </DialogHeader>
         
         <div className="space-y-6 p-1">
+          {/* 自分の記録 */}
+          {personalStats && personalStats.totalGamesPlayed > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  👤 あなたの記録
+                </CardTitle>
+                <CardDescription>
+                  あなたの個人統計データ
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 個人統計メイン - 1行2項目表示 */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 個人クリア数 */}
+                  <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                    <div className="text-xl font-bold text-emerald-600">
+                      {personalStats.totalGameClears.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-emerald-800 font-medium">
+                      クリア数
+                    </div>
+                  </div>
+
+                  {/* 総回答数 */}
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">
+                      {personalStats.totalAnswers.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-blue-800 font-medium">
+                      総回答数
+                    </div>
+                  </div>
+                </div>
+
+                {/* 個人記録詳細 - 1行2項目表示 */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* シングルモード記録 */}
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-lg font-bold text-blue-600">
+                      {personalStats.bestSingleScore.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-blue-800 font-medium">
+                      シングル最高得点
+                    </div>
+                  </div>
+
+                  {/* タイムアタック記録 */}
+                  <div className="text-center p-3 bg-amber-50 rounded-lg">
+                    <div className="text-lg font-bold text-amber-600">
+                      {personalStats.bestTimeattackScore.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-amber-800 font-medium">
+                      TA最高得点
+                    </div>
+                  </div>
+
+                  {/* シングル最長チェーン */}
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-lg font-bold text-green-600">
+                      {personalStats.longestChainSingle}
+                    </div>
+                    <div className="text-xs text-green-800 font-medium">
+                      シングル最長チェーン
+                    </div>
+                  </div>
+
+                  {/* TA最長チェーン */}
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg font-bold text-purple-600">
+                      {personalStats.longestChainTimeattack}
+                    </div>
+                    <div className="text-xs text-purple-800 font-medium">
+                      TA最長チェーン
+                    </div>
+                  </div>
+
+                  {/* シングル最高コンボ */}
+                  <div className="text-center p-3 bg-orange-50 rounded-lg">
+                    <div className="text-lg font-bold text-orange-600">
+                      {personalStats.maxComboSingle || 0}
+                    </div>
+                    <div className="text-xs text-orange-800 font-medium">
+                      シングル最高コンボ
+                    </div>
+                  </div>
+
+                  {/* TA最高コンボ */}
+                  <div className="text-center p-3 bg-pink-50 rounded-lg">
+                    <div className="text-lg font-bold text-pink-600">
+                      {personalStats.maxComboTimeattack || 0}
+                    </div>
+                    <div className="text-xs text-pink-800 font-medium">
+                      TA最高コンボ
+                    </div>
+                  </div>
+                </div>
+
+                {/* 個人統計詳細 - 縦表示に変更 */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="text-center p-2 bg-gray-50 rounded">
+                    <div className="text-base font-bold text-gray-700">
+                      {personalStats.totalGamesPlayed.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      遊んだゲーム数
+                    </div>
+                  </div>
+                  <div className="text-center p-2 bg-gray-50 rounded">
+                    <div className="text-base font-bold text-gray-700">
+                      {personalStats.averageAnswersPerGame.toFixed(1)}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      平均回答数
+                    </div>
+                  </div>
+                  <div className="text-center p-2 bg-blue-50 rounded">
+                    <div className="text-base font-bold text-blue-700">
+                      {personalStats.singleModeGames.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      シングル
+                    </div>
+                  </div>
+                  <div className="text-center p-2 bg-amber-50 rounded">
+                    <div className="text-base font-bold text-amber-700">
+                      {personalStats.timeattackModeGames.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-amber-600">
+                      タイムアタック
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* メイン統計カード - 1行2項目表示 */}
           <div className="grid grid-cols-2 gap-3">
             {/* 総回答数 */}
@@ -233,7 +370,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 {stats.maxChainLength > 0 ? stats.maxChainLength : '記録なし'}
               </div>
               <div className="text-xs text-orange-800 font-medium">
-                シングル最長回答
+                シングル最長チェーン
               </div>
             </div>
 
@@ -243,156 +380,35 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 {stats.maxChainLengthTA > 0 ? stats.maxChainLengthTA : '記録なし'}
               </div>
               <div className="text-xs text-purple-800 font-medium">
-                TA最長回答
+                TA最長チェーン
               </div>
             </div>
           </div>
 
-          {/* 自分の記録 */}
-          {personalStats && personalStats.totalGamesPlayed > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  👤 あなたの記録
-                </CardTitle>
-                <CardDescription>
-                  あなたの個人統計データ
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* 個人統計メイン - 1行2項目表示 */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* 個人クリア数 */}
-                  <div className="text-center p-3 bg-emerald-50 rounded-lg">
-                    <div className="text-xl font-bold text-emerald-600">
-                      {personalStats.totalGameClears.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-emerald-800 font-medium">
-                      クリア数
-                    </div>
-                  </div>
-
-                  {/* 総回答数 */}
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-xl font-bold text-blue-600">
-                      {personalStats.totalAnswers.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-blue-800 font-medium">
-                      総回答数
-                    </div>
-                  </div>
-                </div>
-
-                {/* 個人記録詳細 - 1行2項目表示 */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* シングルモード記録 */}
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-lg font-bold text-blue-600">
-                      {personalStats.bestSingleScore.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-blue-800 font-medium">
-                      シングル最高得点
-                    </div>
-                  </div>
-
-                  {/* タイムアタック記録 */}
-                  <div className="text-center p-3 bg-amber-50 rounded-lg">
-                    <div className="text-lg font-bold text-amber-600">
-                      {personalStats.bestTimeattackScore.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-amber-800 font-medium">
-                      TA最高得点
-                    </div>
-                  </div>
-
-                  {/* シングル最長チェーン */}
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-lg font-bold text-green-600">
-                      {personalStats.longestChainSingle}
-                    </div>
-                    <div className="text-xs text-green-800 font-medium">
-                      シングル最長
-                    </div>
-                  </div>
-
-                  {/* TA最長チェーン */}
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-lg font-bold text-purple-600">
-                      {personalStats.longestChainTimeattack}
-                    </div>
-                    <div className="text-xs text-purple-800 font-medium">
-                      TA最長
-                    </div>
-                  </div>
-
-                  {/* シングル最高コンボ */}
-                  <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <div className="text-lg font-bold text-orange-600">
-                      {personalStats.maxComboSingle || 0}
-                    </div>
-                    <div className="text-xs text-orange-800 font-medium">
-                      シングル最高コンボ
-                    </div>
-                  </div>
-
-                  {/* TA最高コンボ */}
-                  <div className="text-center p-3 bg-pink-50 rounded-lg">
-                    <div className="text-lg font-bold text-pink-600">
-                      {personalStats.maxComboTimeattack || 0}
-                    </div>
-                    <div className="text-xs text-pink-800 font-medium">
-                      TA最高コンボ
-                    </div>
-                  </div>
-                </div>
-
-                {/* 個人統計詳細 - 1行2項目表示 */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-gray-600">遊んだゲーム数:</span>
-                    <span className="font-medium">{personalStats.totalGamesPlayed.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-gray-600">平均回答数:</span>
-                    <span className="font-medium">{personalStats.averageAnswersPerGame.toFixed(1)}</span>
-                  </div>
-                  <div className="flex justify-between bg-blue-50 p-2 rounded">
-                    <span className="text-blue-600">シングル:</span>
-                    <span className="font-medium text-blue-800">{personalStats.singleModeGames.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between bg-amber-50 p-2 rounded">
-                    <span className="text-amber-600">タイムアタック:</span>
-                    <span className="font-medium text-amber-800">{personalStats.timeattackModeGames.toLocaleString()}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 詳細データ */}
+          {/* 累計データ */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                📊 詳細データ
+                📊 累計データ
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex justify-between bg-gray-50 p-2 rounded">
-                  <span className="text-gray-600">総ゲーム数:</span>
-                  <span className="font-medium">{stats.totalGames.toLocaleString()}</span>
+                <div className="text-center p-2 bg-gray-50 rounded">
+                  <div className="text-base font-bold text-gray-700">
+                    {stats.totalGames.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    総ゲーム数
+                  </div>
                 </div>
-                <div className="flex justify-between bg-gray-50 p-2 rounded">
-                  <span className="text-gray-600">平均回答数:</span>
-                  <span className="font-medium">{stats.averageAnswersPerGame.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between bg-blue-50 p-2 rounded">
-                  <span className="text-blue-600">サービス開始:</span>
-                  <span className="font-medium text-blue-800">{formatServiceDate(stats.serviceStartDate)}</span>
-                </div>
-                <div className="flex justify-between bg-green-50 p-2 rounded">
-                  <span className="text-green-600">更新間隔:</span>
-                  <span className="font-medium text-green-800">3時間ごと</span>
+                <div className="text-center p-2 bg-gray-50 rounded">
+                  <div className="text-base font-bold text-gray-700">
+                    {stats.averageAnswersPerGame.toFixed(1)}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    平均回答数
+                  </div>
                 </div>
               </div>
               
