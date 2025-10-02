@@ -218,10 +218,20 @@ export function PokemonShiritoriGame() {
     loadPokemonData().then((data) => {
       setPokemonDatabase(data)
       
-      // URLパラメータからスタート・ゴールIDを取得
+      // URLパラメータからスタート・ゴール・モードを取得
       const urlParams = new URLSearchParams(window.location.search)
       const startId = urlParams.get('start')
       const goalId = urlParams.get('goal')
+      const modeParam = urlParams.get('mode')
+      
+      // モードパラメータが指定されている場合は設定
+      if (modeParam === 'timeattack' || modeParam === 'single') {
+        setGameMode(modeParam as GameMode)
+        if (modeParam === 'timeattack') {
+          setTimeLeft(60)
+          setIsTimeUp(false)
+        }
+      }
       
       let start: PokemonData | null = null
       let goal: PokemonData | null = null
@@ -688,14 +698,16 @@ export function PokemonShiritoriGame() {
     const changesUsed = 3 - passesLeft
     const hintText = usedHint ? "ヒントあり" : "ヒントなし"
 
-    // スタート・ゴールIDを含むURLを生成
+    // スタート・ゴールID・モードを含むURLを生成
     const startId = getPokemonIdByName(pokemonDatabase, startPokemon?.name || "")
     const goalId = getPokemonIdByName(pokemonDatabase, goalPokemon?.name || "")
+    const modeParam = gameMode !== "single" ? `&mode=${gameMode}` : ""
     const shareUrl = startId && goalId 
-      ? `https://ny-an.github.io/pokeshiri-game/?start=${startId}&goal=${goalId}`
-      : "https://ny-an.github.io/pokeshiri-game/"
+      ? `https://ny-an.github.io/pokeshiri-game/?start=${startId}&goal=${goalId}${modeParam}`
+      : `https://ny-an.github.io/pokeshiri-game/${gameMode !== "single" ? `?mode=${gameMode}` : ""}`
 
-    const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"}\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\n同じ問題でチャレンジ！\n${shareUrl}`
+    const modeText = gameMode === "timeattack" ? "タイムアタック" : "シングル"
+    const shareText = `🎮ポケしり🥹\n${isCleared ? "🎉クリア！" : "ゲーム終了"} (${modeText})\n\n${startPokemon?.name} → ${goalPokemon?.name}\n\nスコア: ${score}pt\nつないだ数: ${chainCount}匹\n最大コンボ: ${maxCombo}連鎖\nチェンジ使用: ${changesUsed}回\n${hintText}\n\n同じ問題・モードでチャレンジ！\n${shareUrl}`
 
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
     window.open(twitterUrl, "_blank")
