@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/pokeshiri-game/manifest.json',
-  themeColor: '#3b82f6',
+  themeColor: '#FBF9F3',
   viewport: {
     width: 'device-width',
     initialScale: 1,
@@ -85,6 +85,11 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
+        {/* Safari の枠外色調整 */}
+        <meta name="theme-color" content="#FBF9F3" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="light-content" />
+        <meta name="msapplication-navbutton-color" content="#FBF9F3" />
+        
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH3T42SLP"></script>
         <script
