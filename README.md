@@ -120,12 +120,6 @@ pnpm dev
 - **自動デプロイ**: mainブランチへのpushで自動的にGitHub Pagesにデプロイ
 - **統計データ**: GitHub Actionsで3時間ごとに自動更新（stats.jsonは.gitignoreで除外）
 
-### デバッグ機能
-- **コナミコマンド**: `↑ ↑ ↓ ↓ ← → ← → B A` でデバッグモードを有効化
-- **コンソールコマンド**: 
-  - `showProgressModal(milestone)` - 指定のマイルストーン進捗モーダルを表示
-  - `test100Percent()` - 100%達成演出をテスト
-  - `showProgressStatus()` - 現在の進捗状況を表示
 
 ### アナリティクス（Google Analytics）
 - **イベント追跡**: ゲームクリア・ゲームオーバー・ポケモン回答を記録
