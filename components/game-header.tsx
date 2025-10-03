@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import type { Pokemon, GameMode } from "@/lib/types"
 import { CURRENT_VERSION } from "@/lib/version-utils"
+import { RESTRICTED_POKEMON } from "@/lib/constants"
 
 interface GameHeaderProps {
   startPokemon: Pokemon
@@ -128,7 +129,6 @@ export function GameHeader({
           <div className="overflow-y-auto flex-1 pr-2">
             <div className="grid grid-cols-1 gap-2">
               {allPokemon.map((pokemon) => {
-                const RESTRICTED_POKEMON = ["ロトム", "オドリドリ", "ミノマダム"]
                 const isRestricted = RESTRICTED_POKEMON.includes(pokemon.name)
                 const count = pokemonHistory[pokemon.name] || 0
                 const isCaught = count > 0 || isRestricted

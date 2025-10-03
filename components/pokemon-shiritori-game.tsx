@@ -12,6 +12,7 @@ import {
   type PokemonData,
 } from "@/lib/pokemon-data"
 import { KATAKANA_LIST, DAKUTEN_MAP, RESTRICTED_POKEMON } from "@/lib/constants"
+import { getProgressMessage } from "@/lib/progress-messages"
 import {
   getLastChar,
   checkShiritoriMatch,
@@ -188,7 +189,7 @@ export function PokemonShiritoriGame() {
         const allPokemon = getAllPokemonSorted(pokemonDatabase)
         const caughtCount = Object.keys(pokemonHistory).length
         const displayCaughtCount = caughtCount + RESTRICTED_POKEMON.length
-        const totalCount = allPokemon.length
+        const totalCount = allPokemon.length + RESTRICTED_POKEMON.length
         const currentProgress = totalCount > 0 ? (displayCaughtCount / totalCount) * 100 : 0
         
         console.log("=== 進捗状況 ===")
@@ -542,7 +543,7 @@ export function PokemonShiritoriGame() {
     const allPokemon = getAllPokemonSorted(pokemonDatabase)
     const newCaughtCount = Object.keys(newHistory).length
     const displayCaughtCount = newCaughtCount + RESTRICTED_POKEMON.length
-    const totalCount = allPokemon.length
+    const totalCount = allPokemon.length + RESTRICTED_POKEMON.length
     const currentProgress = totalCount > 0 ? (displayCaughtCount / totalCount) * 100 : 0
     
     // マイルストーンをチェック（順番に表示）
@@ -788,11 +789,21 @@ export function PokemonShiritoriGame() {
     window.open(twitterUrl, "_blank")
   }
 
+  const handleShareProgressToX = () => {
+    const shareUrl = `https://ny-an.github.io/pokeshiri-game/`
+    const currentProgress = progressMilestone || 0
+    const progressMessage = getProgressMessage(currentProgress)
+    const shareText = `🎮ポケしり🥹\n📖 図鑑完成度: ${currentProgress}%\n\n✨ ${displayCaughtCount}匹/${totalCount}匹を制覇！\n\n${progressMessage}\n\nポケモンしりとりで図鑑を埋めよう！\nチャレンジしてみて！\n${shareUrl}`
+
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(twitterUrl, "_blank")
+  }
 
   const allPokemon = getAllPokemonSorted(pokemonDatabase)
   const caughtCount = Object.keys(pokemonHistory).length
   const displayCaughtCount = caughtCount + RESTRICTED_POKEMON.length
-  const totalCount = allPokemon.length
+  // 図鑑総数 = プレイ可能ポケモン + 制限ポケモン（図鑑には表示される）
+  const totalCount = allPokemon.length + RESTRICTED_POKEMON.length
   const completionRate = totalCount > 0 ? ((displayCaughtCount / totalCount) * 100).toFixed(1) : "0.0"
 
   if (isLoading || !startPokemon || !goalPokemon) {
@@ -919,6 +930,7 @@ export function PokemonShiritoriGame() {
           totalCount={totalCount}
           newPokemon={newPokemonName}
           is100Percent={progressMilestone === 100}
+          handleShareProgressToX={handleShareProgressToX}
         />
 
         <StatsModal

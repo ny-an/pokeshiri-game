@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Share2 } from "lucide-react"
+import { getProgressMessage } from "@/lib/progress-messages"
 
 interface ProgressModalProps {
   isOpen: boolean
@@ -13,6 +15,7 @@ interface ProgressModalProps {
   totalCount: number
   newPokemon?: string
   is100Percent?: boolean
+  handleShareProgressToX?: () => void
 }
 
 export function ProgressModal({ 
@@ -22,7 +25,8 @@ export function ProgressModal({
   caughtCount, 
   totalCount, 
   newPokemon,
-  is100Percent = false
+  is100Percent = false,
+  handleShareProgressToX
 }: ProgressModalProps) {
   const [showConfetti, setShowConfetti] = useState(false)
   const [confettiTimer, setConfettiTimer] = useState<NodeJS.Timeout | null>(null)
@@ -57,52 +61,6 @@ export function ProgressModal({
     }
   }, [isOpen, is100Percent, showConfetti])
 
-  const getProgressMessage = (progress: number) => {
-    if (progress >= 100) {
-      return "🎉🎉🎉 完全制覇！ポケモン界の神！ 🎉🎉🎉"
-    } else if (progress >= 1 && progress < 5) {
-      return "さあ、伝説の始まりだ！"
-    } else if (progress >= 5 && progress < 10) {
-      return "最初の一歩を踏み出した"
-    } else if (progress >= 10 && progress < 15) {
-      return "冒険が本格的に始まる"
-    } else if (progress >= 15 && progress < 20) {
-      return "仲間たちとの絆が深まる"
-    } else if (progress >= 20 && progress < 25) {
-      return "真のトレーナーへの道を歩む"
-    } else if (progress >= 25 && progress < 30) {
-      return "知識と経験が積み重なる"
-    } else if (progress >= 30 && progress < 35) {
-      return "伝説への扉が開かれる"
-    } else if (progress >= 35 && progress < 40) {
-      return "神話の世界に足を踏み入れる"
-    } else if (progress >= 40 && progress < 45) {
-      return "古の力が目覚め始める"
-    } else if (progress >= 45 && progress < 50) {
-      return "伝説のポケモンが姿を現す"
-    } else if (progress >= 50 && progress < 55) {
-      return "時空を超えた冒険が始まる"
-    } else if (progress >= 55 && progress < 60) {
-      return "異次元の扉が開かれる"
-    } else if (progress >= 60 && progress < 65) {
-      return "神々の領域に近づく"
-    } else if (progress >= 65 && progress < 70) {
-      return "天界の門をくぐる"
-    } else if (progress >= 70 && progress < 75) {
-      return "宇宙の真理に触れる"
-    } else if (progress >= 75 && progress < 80) {
-      return "星々の記憶を読み解く"
-    } else if (progress >= 80 && progress < 85) {
-      return "究極の存在と対峙する"
-    } else if (progress >= 85 && progress < 90) {
-      return "創造の秘密を解き明かす"
-    } else if (progress >= 90 && progress < 95) {
-      return "創造主の座に手が届く"
-    } else if (progress >= 95 && progress < 100) {
-      return "神の領域に到達する"
-    }
-    return "おめでとう！"
-  }
 
   const getProgressEmoji = (progress: number) => {
     if (progress >= 100) {
@@ -226,12 +184,12 @@ export function ProgressModal({
           {[...Array(getConfettiCount(progress))].map((_, i) => (
             <div
               key={i}
-              className="absolute animate-bounce"
+              className="absolute animate-confetti-fade"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
+                animationDuration: `${3 + Math.random() * 2}s`,
               }}
             >
               <span className={getConfettiSize(progress)}>
@@ -304,9 +262,21 @@ export function ProgressModal({
               />
             </div>
 
-            <Button onClick={onClose} className={`w-full ${is100Percent ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}`}>
-              {is100Percent ? '🎉 ありがとう！' : '続ける'}
-            </Button>
+            <div className="space-y-2">
+              {handleShareProgressToX && (
+                <Button 
+                  onClick={handleShareProgressToX} 
+                  size="sm" 
+                  className="w-full bg-black hover:bg-black/90 text-white"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  進捗をシェア！
+                </Button>
+              )}
+              <Button onClick={onClose} className={`w-full ${is100Percent ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}`}>
+                {is100Percent ? '🎉 続ける' : '続ける'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
