@@ -131,38 +131,52 @@ export function PokemonShiritoriGame() {
   // デバッグモードの有効化（隠しコマンド）
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // ハッキング警告メッセージを表示
-      console.log("🚫 はっきんぐしないで！！")
-      
-      let konamiCode: string[] = []
-      const konamiSequence = [
-        'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-        'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
-        'KeyB', 'KeyA'
-      ]
-
-      const handleKeyDown = (event: KeyboardEvent) => {
-        konamiCode.push(event.code)
-        if (konamiCode.length > konamiSequence.length) {
-          konamiCode.shift()
-        }
+      try {
+        // ハッキング警告メッセージを表示
+        console.log("🚫 はっきんぐしないで！！")
         
-        if (konamiCode.join(',') === konamiSequence.join(',')) {
-          setDebugMode(true)
-          console.log("🎮 デバッグモードが有効になりました！")
-          console.log("=== ポケしり デバッグコマンド ===")
-          console.log("showProgressModal(milestone) - 指定したマイルストーンの進捗モーダルを表示")
-          console.log("resetProgressMilestone() - 進捗マイルストーンをリセット")
-          console.log("showProgressStatus() - 現在の進捗状況を表示")
-          console.log("test100Percent() - 100%達成演出をテスト表示")
-          console.log("disableDebugMode() - デバッグモードを無効化")
-          console.log("=====================================")
-          konamiCode = []
-        }
-      }
+        let konamiCode: string[] = []
+        const konamiSequence = [
+          'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+          'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+          'KeyB', 'KeyA'
+        ]
 
-      window.addEventListener('keydown', handleKeyDown)
-      return () => window.removeEventListener('keydown', handleKeyDown)
+        const handleKeyDown = (event: KeyboardEvent) => {
+          try {
+            konamiCode.push(event.code)
+            if (konamiCode.length > konamiSequence.length) {
+              konamiCode.shift()
+            }
+            
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+              setDebugMode(true)
+              console.log("🎮 デバッグモードが有効になりました！")
+              console.log("=== ポケしり デバッグコマンド ===")
+              console.log("showProgressModal(milestone) - 指定したマイルストーンの進捗モーダルを表示")
+              console.log("resetProgressMilestone() - 進捗マイルストーンをリセット")
+              console.log("showProgressStatus() - 現在の進捗状況を表示")
+              console.log("test100Percent() - 100%達成演出をテスト表示")
+              console.log("disableDebugMode() - デバッグモードを無効化")
+              console.log("=====================================")
+              konamiCode = []
+            }
+          } catch (error) {
+            console.error('コナミコード処理中にエラーが発生しました:', error)
+          }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => {
+          try {
+            window.removeEventListener('keydown', handleKeyDown)
+          } catch (error) {
+            console.error('イベントリスナーの削除中にエラーが発生しました:', error)
+          }
+        }
+      } catch (error) {
+        console.error('デバッグモード初期化中にエラーが発生しました:', error)
+      }
     }
   }, [])
 
@@ -233,79 +247,135 @@ export function PokemonShiritoriGame() {
     const HISTORY_KEY = "pokemon-shiritori-history"
     const LAST_SHOWN_MILESTONE_KEY = "pokemon-shiritori-last-shown-milestone"
     
-    // ゲームモードに応じてハイスコアを読み込み
-    setHighScore(loadHighScore(gameMode))
+    try {
+      // ゲームモードに応じてハイスコアを読み込み
+      setHighScore(loadHighScore(gameMode))
 
-    const savedHistory = localStorage.getItem(HISTORY_KEY)
-    if (savedHistory) {
-      try {
-        setPokemonHistory(JSON.parse(savedHistory))
-      } catch (error) {
-        console.error("[v0] Failed to load Pokemon history:", error)
+      const savedHistory = localStorage.getItem(HISTORY_KEY)
+      if (savedHistory) {
+        try {
+          setPokemonHistory(JSON.parse(savedHistory))
+        } catch (error) {
+          console.error("[v0] Failed to load Pokemon history:", error)
+          console.error("無効な履歴データのため、新しい履歴で開始します")
+          setPokemonHistory({})
+        }
       }
-    }
 
-    const savedLastShownMilestone = localStorage.getItem(LAST_SHOWN_MILESTONE_KEY)
-    if (savedLastShownMilestone) {
-      setLastShownMilestone(Number.parseInt(savedLastShownMilestone, 10))
+      const savedLastShownMilestone = localStorage.getItem(LAST_SHOWN_MILESTONE_KEY)
+      if (savedLastShownMilestone) {
+        try {
+          setLastShownMilestone(Number.parseInt(savedLastShownMilestone, 10))
+        } catch (error) {
+          console.error("[v0] Failed to parse last shown milestone:", error)
+          console.error("無効なマイルストーンデータのため、0から開始します")
+          setLastShownMilestone(0)
+        }
+      }
+    } catch (error) {
+      console.error('[v0] localStorage アクセスエラー:', error)
+      console.error('localStorageの読み込みに失敗しました。デフォルト値で開始します')
+      // localStorageがアクセスできない場合はデフォルト値を設定
+      setPokemonHistory({})
+      setLastShownMilestone(0)
     }
   }, [gameMode])
 
   useEffect(() => {
-    loadPokemonData().then((data) => {
-      setPokemonDatabase(data)
-      
-      // URLパラメータからスタート・ゴール・モードを取得
-      const urlParams = new URLSearchParams(window.location.search)
-      const startId = urlParams.get('start')
-      const goalId = urlParams.get('goal')
-      const modeParam = urlParams.get('mode')
-      
-      // モードパラメータが指定されている場合は設定
-      if (modeParam === 'timeattack' || modeParam === 'single') {
-        setGameMode(modeParam as GameMode)
-        if (modeParam === 'timeattack') {
-          setTimeLeft(60)
-          setIsTimeUp(false)
-        }
-      }
-      
-      let start: PokemonData | null = null
-      let goal: PokemonData | null = null
-      
-      // URLパラメータが指定されている場合はそれを使用
-      if (startId && goalId) {
-        start = getPokemonById(data, startId)
-        goal = getPokemonById(data, goalId)
-      }
-      
-      // パラメータが無効または未指定の場合はランダムに生成
-      if (!start || !goal) {
-        start = getRandomPokemon(data, (pokemon) => {
-          const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
-          return lastChar !== "ン"
-        })
-        goal = getRandomPokemon(data)
-      }
+    loadPokemonData()
+      .then((data) => {
+        try {
+          setPokemonDatabase(data)
+          
+          // URLパラメータからスタート・ゴール・モードを取得
+          const urlParams = new URLSearchParams(window.location.search)
+          const startId = urlParams.get('start')
+          const goalId = urlParams.get('goal')
+          const modeParam = urlParams.get('mode')
+          
+          // モードパラメータが指定されている場合は設定
+          if (modeParam === 'timeattack' || modeParam === 'single') {
+            setGameMode(modeParam as GameMode)
+            if (modeParam === 'timeattack') {
+              setTimeLeft(60)
+              setIsTimeUp(false)
+            }
+          }
+          
+          let start: PokemonData | null = null
+          let goal: PokemonData | null = null
+          
+          // URLパラメータが指定されている場合はそれを使用
+          if (startId && goalId) {
+            start = getPokemonById(data, startId)
+            goal = getPokemonById(data, goalId)
+          }
+          
+          // パラメータが無効または未指定の場合はランダムに生成
+          if (!start || !goal) {
+            start = getRandomPokemon(data, (pokemon) => {
+              const lastChar = pokemon.name.charAt(pokemon.name.length - 1)
+              return lastChar !== "ン"
+            })
+            goal = getRandomPokemon(data)
+          }
 
-      if (start && goal) {
-        const startPoke: Pokemon = {
-          name: start.name,
-          types: start.type2 ? [start.type1, start.type2] : [start.type1],
-        }
-        const goalPoke: Pokemon = {
-          name: goal.name,
-          types: goal.type2 ? [goal.type1, goal.type2] : [goal.type1],
-        }
-        setStartPokemon(startPoke)
-        setGoalPokemon(goalPoke)
-        setChain([{ type: "pokemon", pokemon: startPoke, points: 0 }])
-        setUsedNames(new Set([start.name]))
-        setNextChar(getLastChar(start.name))
-      }
+          if (start && goal) {
+            const startPoke: Pokemon = {
+              name: start.name,
+              types: start.type2 ? [start.type1, start.type2] : [start.type1],
+            }
+            const goalPoke: Pokemon = {
+              name: goal.name,
+              types: goal.type2 ? [goal.type1, goal.type2] : [goal.type1],
+            }
+            setStartPokemon(startPoke)
+            setGoalPokemon(goalPoke)
+            setChain([{ type: "pokemon", pokemon: startPoke, points: 0 }])
+            setUsedNames(new Set([start.name]))
+            setNextChar(getLastChar(start.name))
+          }
 
-      setIsLoading(false)
-    })
+          setIsLoading(false)
+        } catch (error) {
+          console.error('🚨 データ初期化中にエラーが発生しました:', error)
+          console.error('エラーの詳細:', error)
+          setIsLoading(false)
+          // エラーが発生してもゲームを続行できるようにダミーデータを設定
+          const dummyStart: Pokemon = {
+            name: "ピカチュウ",
+            types: ["電気"],
+          }
+          const dummyGoal: Pokemon = {
+            name: "イーブイ",
+            types: ["ノーマル"],
+          }
+          setStartPokemon(dummyStart)
+          setGoalPokemon(dummyGoal)
+          setChain([{ type: "pokemon", pokemon: dummyStart, points: 0 }])
+          setUsedNames(new Set([dummyStart.name]))
+          setNextChar(getLastChar(dummyStart.name))
+        }
+      })
+      .catch((error) => {
+        console.error('🚨 Pokemonデータの読み込みに失敗しました:', error)
+        console.error('エラーの詳細:', error)
+        setIsLoading(false)
+        // エラーが発生してもゲームを続行できるようにダミーデータを設定
+        const dummyStart: Pokemon = {
+          name: "ピカチュウ",
+          types: ["電気"],
+        }
+        const dummyGoal: Pokemon = {
+          name: "イーブイ",
+          types: ["ノーマル"],
+        }
+        setStartPokemon(dummyStart)
+        setGoalPokemon(dummyGoal)
+        setChain([{ type: "pokemon", pokemon: dummyStart, points: 0 }])
+        setUsedNames(new Set([dummyStart.name]))
+        setNextChar(getLastChar(dummyStart.name))
+      })
   }, [])
 
   useEffect(() => {
