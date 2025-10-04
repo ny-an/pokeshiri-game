@@ -181,8 +181,10 @@ async function fetchAnalyticsData() {
           dimensions: [
             { name: 'eventName' },
             { name: 'customEvent:game_mode' },
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            { name: 'customEvent:d_score_single' },
+            { name: 'customEvent:d_score_timeattack' },
+            { name: 'customEvent:d_chain_length_single' },
+            { name: 'customEvent:d_chain_length_timeattack' }
           ],
           metrics: [
             { name: 'eventCount' }
@@ -212,21 +214,23 @@ async function fetchAnalyticsData() {
           const dimensionValues = row.dimensionValues || [];
           
           // ディメンション値からパラメータ値を取得
-          // 0: eventName, 1: game_mode, 2: score, 3: chain_length
+          // 0: eventName, 1: game_mode, 2: d_score_single, 3: d_score_timeattack, 4: d_chain_length_single, 5: d_chain_length_timeattack
           const eventName = dimensionValues[0]?.value;
           const gameMode = dimensionValues[1]?.value;
-          const score = parseInt(dimensionValues[2]?.value || '0');
-          const chainLength = parseInt(dimensionValues[3]?.value || '0');
+          const scoreSingle = parseInt(dimensionValues[2]?.value || '0');
+          const scoreTA = parseInt(dimensionValues[3]?.value || '0');
+          const chainLengthSingle = parseInt(dimensionValues[4]?.value || '0');
+          const chainLengthTA = parseInt(dimensionValues[5]?.value || '0');
 
-          console.log('🔍 処理中:', { eventName, gameMode, score, chainLength });
+          console.log('🔍 処理中:', { eventName, gameMode, scoreSingle, scoreTA, chainLengthSingle, chainLengthTA });
 
           // モード別に分けて最高値を更新
           if (gameMode === 'single') {
-            if (score > maxScoreSingle) maxScoreSingle = score;
-            if (chainLength > maxChainLengthSingle) maxChainLengthSingle = chainLength;
+            if (scoreSingle > maxScoreSingle) maxScoreSingle = scoreSingle;
+            if (chainLengthSingle > maxChainLengthSingle) maxChainLengthSingle = chainLengthSingle;
           } else if (gameMode === 'timeattack') {
-            if (score > maxScoreTA) maxScoreTA = score;
-            if (chainLength > maxChainLengthTA) maxChainLengthTA = chainLength;
+            if (scoreTA > maxScoreTA) maxScoreTA = scoreTA;
+            if (chainLengthTA > maxChainLengthTA) maxChainLengthTA = chainLengthTA;
           }
         });
       }
@@ -332,8 +336,10 @@ async function fetchAnalyticsData() {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
           dimensions: [
             { name: 'customEvent:game_mode' },
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            { name: 'customEvent:d_score_single' },
+            { name: 'customEvent:d_score_timeattack' },
+            { name: 'customEvent:d_chain_length_single' },
+            { name: 'customEvent:d_chain_length_timeattack' }
           ],
           metrics: [
             { name: 'eventCount' }
@@ -357,8 +363,10 @@ async function fetchAnalyticsData() {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
           dimensions: [
             { name: 'customEvent:game_mode' },
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            { name: 'customEvent:d_score_single' },
+            { name: 'customEvent:d_score_timeattack' },
+            { name: 'customEvent:d_chain_length_single' },
+            { name: 'customEvent:d_chain_length_timeattack' }
           ],
           metrics: [
             { name: 'eventCount' }

@@ -1,7 +1,7 @@
 name: Update Game Statistics
 
 on:
-  # 3時間ごとに実行
+  # 3時間ごとに実行（基本統計）
   schedule:
     - cron: '0 */3 * * *'
   
@@ -46,10 +46,7 @@ jobs:
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       run: |
         echo "🔍 Google Analytics データを取得中..."
-        node scripts/fetch-analytics.js
-        
-        echo "🏆 最高記録をカスタムディメンションから取得中..."
-        node scripts/fetch-maximums-from-dimensions.js
+        node scripts/fetch-stats.js
         
     - name: 💾 Commit and Push Updated Stats
       run: |
