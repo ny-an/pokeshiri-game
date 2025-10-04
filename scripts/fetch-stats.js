@@ -246,14 +246,17 @@ async function fetchPokemonStats(authClient, propertyId, startDate, endDate) {
     let mostUsedPokemonCount = 0;
     
     if (pokemonStatsResponse.data.rows && pokemonStatsResponse.data.rows.length > 0) {
-      const topPokemon = pokemonStatsResponse.data.rows[0];
-      const pokemonName = topPokemon.dimensionValues?.[0]?.value;
-      const usageCount = parseInt(topPokemon.metricValues?.[0]?.value || '0');
-      
-      if (pokemonName && pokemonName !== '(not set)') {
-        mostUsedPokemon = pokemonName;
-        mostUsedPokemonCount = usageCount;
-        console.log(`🏆 最も使用されたPokemon: ${pokemonName} (${usageCount}回)`);
+      // (not set)を除外して最初の有効なPokemonを取得
+      for (const row of pokemonStatsResponse.data.rows) {
+        const pokemonName = row.dimensionValues?.[0]?.value;
+        const usageCount = parseInt(row.metricValues?.[0]?.value || '0');
+        
+        if (pokemonName && pokemonName !== '(not set)') {
+          mostUsedPokemon = pokemonName;
+          mostUsedPokemonCount = usageCount;
+          console.log(`🏆 最も使用されたPokemon: ${pokemonName} (${usageCount}回)`);
+          break;
+        }
       }
     }
 
@@ -327,10 +330,31 @@ async function fetchAnalyticsData(options = {}) {
     }
 
     console.log('📊 取得した統計データ:');
-    console.log(`- 総回答数: ${stats.totalPokemonAnswers.toLocaleString()}`);
-    console.log(`- クリア数: ${stats.totalGameClears.toLocaleString()}`);
-    console.log(`- ゲームオーバー数: ${stats.totalGameOvers.toLocaleString()}`);
-    console.log(`- 成功率: ${stats.clearRate.toFixed(1)}%`);
+    
+    // 基本統計の表示
+    if (includeBasicStats) {
+      console.log(`- 総回答数: ${stats.totalPokemonAnswers.toLocaleString()}`);
+      console.log(`- クリア数: ${stats.totalGameClears.toLocaleString()}`);
+      console.log(`- ゲームオーバー数: ${stats.totalGameOvers.toLocaleString()}`);
+      console.log(`- 成功率: ${stats.clearRate.toFixed(1)}%`);
+    }
+    
+    // 最高記録の表示
+    if (includeMaximumRecords) {
+      console.log(`- 最高スコア（シングル）: ${stats.maxScore.toLocaleString()}`);
+      console.log(`- 最高スコア（タイムアタック）: ${stats.maxScoreTA.toLocaleString()}`);
+      console.log(`- 最高チェーン（シングル）: ${stats.maxChainLength}`);
+      console.log(`- 最高チェーン（タイムアタック）: ${stats.maxChainLengthTA}`);
+    }
+    
+    // Pokemon統計の表示
+    if (includePokemonStats) {
+      if (stats.mostUsedPokemon) {
+        console.log(`- 最も使用されたPokemon: ${stats.mostUsedPokemon} (${stats.mostUsedPokemonCount}回)`);
+      } else {
+        console.log('- 最も使用されたPokemon: データなし');
+      }
+    }
 
     // JSONファイルに出力
     const outputPath = path.join(process.cwd(), 'public', 'stats.json');
