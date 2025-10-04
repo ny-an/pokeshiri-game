@@ -37,6 +37,7 @@
 ## 🛠️ 技術情報
 
 ### プロジェクト情報
+- **バージョン**: v1.0.1（正式リリース版）
 - **デプロイ先**: GitHub Pages
 - **公開URL**: https://nyama.github.io/pokeshiri-game/
 - **CI/CD**: GitHub Actions（自動デプロイ、統計データ3時間ごと更新）
@@ -146,6 +147,11 @@ pnpm build
 **過去の統合例:**
 - `update-maximums.yml` → `update-stats.yml` に統合（機能重複のため）
 - `fetch-analytics.js` + `fetch-maximums-from-dimensions.js` → `fetch-stats.js` に統合
+
+**最新の改善 (v2.2):**
+- `fetch-stats.js`をモジュラー設計にリファクタリング
+- コマンドライン引数対応（`--basic-only`, `--max-only`, `--pokemon-only`等）
+- GitHub Actionsのコミットメッセージを日本時間（JST）に変更
 
 詳細は [技術仕様書](docs/development/technical-specifications.md) を参照してください。
 

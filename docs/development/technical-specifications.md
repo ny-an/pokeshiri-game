@@ -4,7 +4,7 @@
 
 ### プロジェクト情報
 - **プロジェクト名**: ポケモンしりとりゲーム（ポケしり）
-- **バージョン**: v2.0（タイムアタックモード対応）
+- **バージョン**: v1.0.1（正式リリース版）
 - **フレームワーク**: Next.js 14 (App Router)
 - **言語**: TypeScript
 - **デプロイ先**: GitHub Pages
@@ -259,6 +259,13 @@ npm run build
 
 # 統計データ取得（ローカル）
 node scripts/fetch-stats.js
+
+# オプション付き実行例
+node scripts/fetch-stats.js --basic-only          # 基本統計のみ
+node scripts/fetch-stats.js --max-only            # 最高記録のみ
+node scripts/fetch-stats.js --pokemon-only        # Pokemon統計のみ
+node scripts/fetch-stats.js --start-date 2024-10-01  # 期間指定
+node scripts/fetch-stats.js --help                # ヘルプ表示
 ```
 
 ### デプロイメント
@@ -327,6 +334,106 @@ node scripts/fetch-stats.js
 
 ## 更新履歴
 
+### v1.0.1 - 2024年10月4日
+**プロジェクト整理・リファクタリング版**
+
+#### 主要変更
+1. **fetch系スクリプトの統合**
+   - `fetch-analytics.js` + `fetch-analytics-fixed.js` + `fetch-maximums-from-dimensions.js` → `fetch-stats.js` に統合
+   - コード量: 1,100行 → 441行（60%削減）
+   - 重複コードの完全排除
+
+2. **GitHub Actionsワークフローの統合**
+   - `update-maximums.yml` → `update-stats.yml` に統合
+   - 機能重複の解消
+   - ワークフロー作成ガイドライン追加
+
+3. **fetch-stats.jsの機能強化**
+   - モジュラー設計: 5つの独立した関数に分割
+   - コマンドライン引数対応（--basic-only, --max-only, --pokemon-only等）
+   - 期間指定機能（--start-date, --end-date）
+   - ヘルプ機能（--help）
+
+4. **ドキュメント整理**
+   - README.mdの構成を論理的に再編成
+   - 重複内容の統合・削除
+   - 視認性向上（絵文字・階層構造）
+
+5. **GitHub Actions改善**
+   - コミットメッセージの日付を日本時間（JST）に変更
+   - より詳細なログ出力
+
+#### 技術的改善
+- **保守性**: モジュラー設計で各機能が独立
+- **パフォーマンス**: API呼び出し回数の最適化
+- **柔軟性**: 必要な機能だけを選択実行可能
+- **デバッグ**: 個別機能のテストが容易
+
+#### 影響範囲
+- `scripts/fetch-stats.js` (新規・統合)
+- `.github/workflows/update-stats.yml` (更新)
+- `README.md` (再編成)
+- `docs/development/technical-specifications.md` (ガイドライン追加)
+
+### v1.0.0 - 2024年10月4日
+**正式リリース版**
+
+#### 主要機能
+- **ポケモンしりとりゲーム**: 1025匹のポケモンを使用したしりとり
+- **ゲームモード**: シングルモード・タイムアタックモード
+- **統計機能**: 個人統計・全体統計・最高記録
+- **図鑑システム**: 進捗管理・マイルストーン達成
+- **シェア機能**: ゲーム結果・進捗のX（Twitter）シェア
+- **PWA対応**: オフライン対応・アプリ化
+
+#### 技術仕様
+- **フレームワーク**: Next.js 14 (App Router)
+- **言語**: TypeScript
+- **UI**: Material Design風・Bootstrap対応
+- **デプロイ**: GitHub Pages
+- **統計**: Google Analytics 4連携
+
+### v2.2 - 2024年10月4日（開発版）
+**プロジェクト整理・リファクタリング**
+
+#### 主要変更
+1. **fetch系スクリプトの統合**
+   - `fetch-analytics.js` + `fetch-analytics-fixed.js` + `fetch-maximums-from-dimensions.js` → `fetch-stats.js` に統合
+   - コード量: 1,100行 → 441行（60%削減）
+   - 重複コードの完全排除
+
+2. **GitHub Actionsワークフローの統合**
+   - `update-maximums.yml` → `update-stats.yml` に統合
+   - 機能重複の解消
+   - ワークフロー作成ガイドライン追加
+
+3. **fetch-stats.jsの機能強化**
+   - モジュラー設計: 5つの独立した関数に分割
+   - コマンドライン引数対応（--basic-only, --max-only, --pokemon-only等）
+   - 期間指定機能（--start-date, --end-date）
+   - ヘルプ機能（--help）
+
+4. **ドキュメント整理**
+   - README.mdの構成を論理的に再編成
+   - 重複内容の統合・削除
+   - 視認性向上（絵文字・階層構造）
+
+5. **GitHub Actions改善**
+   - コミットメッセージの日付を日本時間（JST）に変更
+   - より詳細なログ出力
+
+#### 技術的改善
+- **保守性**: モジュラー設計で各機能が独立
+- **パフォーマンス**: API呼び出し回数の最適化
+- **柔軟性**: 必要な機能だけを選択実行可能
+- **デバッグ**: 個別機能のテストが容易
+
+#### 影響範囲
+- `scripts/fetch-stats.js` (新規・統合)
+- `.github/workflows/update-stats.yml` (更新)
+- `README.md` (再編成)
+- `docs/development/technical-specifications.md` (ガイドライン追加)
+
 ### v2.1 - 2025年10月2日
 #### iPhoneSE対応・モーダル表示改善
 **問題**: iPhoneSEサイズの画面でモーダルが操作できない問題
@@ -383,6 +490,6 @@ node scripts/fetch-stats.js
 
 ---
 
-**更新日**: 2025年10月2日  
-**バージョン**: 2.1  
+**更新日**: 2024年10月4日  
+**バージョン**: 1.0.1  
 **作成者**: 開発チーム

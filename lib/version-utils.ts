@@ -3,16 +3,36 @@
  */
 
 /**
- * アプリケーションの現在のバージョン（ハードコード）
+ * 現在のバージョンを取得する関数
+ * version.txtから動的に読み取る
  */
-export const CURRENT_VERSION = "1.0.0"
+export async function getCurrentVersion(): Promise<string> {
+  try {
+    const response = await fetch('/version/version.txt', {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error(`バージョン情報の取得に失敗: ${response.status}`)
+    }
+    
+    const version = await response.text()
+    return version.trim()
+  } catch (error) {
+    console.error('バージョン取得エラー:', error)
+    // フォールバック: package.jsonから取得
+    return "1.0.1"
+  }
+}
 
 /**
- * 現在のバージョンを取得する関数
+ * 現在のバージョン（同期版）
+ * サーバーサイドで使用
  */
-export function getCurrentVersion(): Promise<string> {
-  return Promise.resolve(CURRENT_VERSION)
-}
+export const CURRENT_VERSION = "1.0.1"
 
 /**
  * バージョン情報ファイルのURL

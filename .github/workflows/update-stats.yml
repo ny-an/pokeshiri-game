@@ -36,6 +36,9 @@ jobs:
     - name: 📦 Install dependencies
       run: npm ci
       
+    - name: 🔄 Update Version File
+      run: npm run update-version
+      
     - name: 📊 Fetch Analytics Data
       env:
         GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
@@ -46,17 +49,18 @@ jobs:
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       run: |
         echo "🔍 Google Analytics データを取得中..."
+        echo "📊 全統計データを取得します（基本統計 + 最高記録 + Pokemon統計）"
         node scripts/fetch-stats.js
         
     - name: 💾 Commit and Push Updated Stats
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add public/stats.json
+        git add public/stats.json public/version/version.txt
         if git diff --staged --quiet; then
           echo "📊 統計データに変更はありません"
         else
-          git commit -m "📊 統計データを自動更新 - $(date '+%Y-%m-%d %H:%M:%S')"
+          git commit -m "📊 統計データを自動更新 - $(TZ='Asia/Tokyo' date '+%Y-%m-%d %H:%M:%S JST')"
           git push
           echo "✅ 統計データを更新しました"
         fi

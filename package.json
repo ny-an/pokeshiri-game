@@ -1,13 +1,14 @@
 {
   "name": "my-v0-project",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "export": "next build && next export"
+    "export": "next build && next export",
+    "update-version": "node scripts/update-version.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
