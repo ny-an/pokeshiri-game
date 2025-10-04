@@ -15,7 +15,7 @@ async function fetchAnalyticsData() {
     
     try {
       // 環境変数が設定されている場合は環境変数を使用
-      if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GA4_PROPERTY_ID) {
+      if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GA4_PROPERTY_PROPERTY_ID) {
         credentials = {
           type: 'service_account',
           project_id: process.env.GOOGLE_PROJECT_ID,
@@ -73,18 +73,15 @@ async function fetchAnalyticsData() {
           {
             startDate: startDate,
             endDate: endDate,
-          },
-        ],
+          }],
         dimensions: [
           {
             name: 'eventName',
-          },
-        ],
+          }],
         metrics: [
           {
             name: 'eventCount',
-          },
-        ],
+          }],
         dimensionFilter: {
           filter: {
             fieldName: 'eventName',
@@ -108,7 +105,7 @@ async function fetchAnalyticsData() {
       maxScoreTA: 0, // タイムアタックモードの最高スコア
       maxChainLength: 0, // シングルモードの最長チェーン（後方互換性のため残す）
       maxChainLengthTA: 0, // タイムアタックモードの最長チェーン
-      mostUsedPokemon: null, // 最も使用されたPokemon名
+      mostUsedPerson: null, // 最も使用されたPokemon名
       mostUsedPokemonCount: 0, // その使用回数
       serviceStartDate: startDate,
       lastUpdated: new Date().toISOString(),
@@ -143,46 +140,19 @@ async function fetchAnalyticsData() {
       ? stats.totalPokemonAnswers / stats.totalGames
       : 0;
 
-    // 個別イベントレコードから最高値を取得
+    // イベントから個別レコードを取得して最高値を計算
     try {
       console.log('🔍 個別イベントレコードから最高値を取得開始...');
       
-      // まず、game_clearイベントの詳細を確認
-      console.log('🔍 game_clearイベントの詳細を確認中...');
+      // game_clearイベントの詳細を取得
       const gameClearResponse = await analyticsdata.properties.runReport({
         property: `properties/${propertyId}`,
         requestBody: {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
           dimensions: [
-            { name: 'eventName' }
-          ],
-          metrics: [
-            { name: 'eventCount' }
-          ],
-          dimensionFilter: {
-            filter: {
-              fieldName: 'eventName',
-              inListFilter: {
-                values: ['game_clear']
-              }
-            }
-          }
-        }
-      });
-
-      console.log('📋 game_clearイベント詳細:', JSON.stringify(gameClearResponse.data, null, 2));
-
-      // イベントパラメータを直接取得してみる
-      console.log('🔍 イベントパラメータを直接取得中...');
-      const gameEventsResponse = await analyticsdata.properties.runReport({
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [{ startDate: startDate, endDate: endDate }],
-          dimensions: [
-            { name: 'eventName' },
-            { name: 'customEvent:game_mode' },
+            ({ name: 'customEvent:game_mode' },
             { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            { name: 'customEvent:chain_length' })
           ],
           metrics: [
             { name: 'eventCount' }
@@ -190,89 +160,105 @@ async function fetchAnalyticsData() {
           dimensionFilter: {
             filter: {
               fieldName: 'eventName',
-              inListFilter: {
-                values: ['game_clear', 'game_over']
-              }
+              stringFilter: { value: 'game_clear' }
             }
           },
-          limit: 10000 // 最大10000件取得
+          orderBys: [
+            {
+              dimensions: [
+                { name: 'customEvent:game_mode' }
+              ]
+            }
+          ],
+          limit: 1000
         }
       });
 
-      console.log('📋 ゲームイベントレコード:', JSON.stringify(gameEventsResponse.data, null, 2));
+      // game_overイベントの詳細を取得
+      const gameOverResponse = await analyticsdata.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestedBody: {
+          dateRanges: [{ startDate: startDate, endDate: endDate }],
+          dimensions: [
+            ({ name: 'customEvent:game_mode' },
+            { name: 'customEvent:score' },
+            { name: 'customEvent:chain_length' })
+          ],
+          metrics: [
+            { name: 'eventCount' }
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'eventName',
+              stringFilter: { value: 'game_over' }
+            }
+          },
+          orderBys: [
+            {
+              dimensions: [
+                { name: 'customEvent:game_mode' }
+              ]
+            }
+          ],
+          limit: 1000
+        }
+      });
 
-      // 個別レコードから最高値を計算
+      console.log('📋 game_clear詳細レスポンス:', JSON.stringify(gameClearResponse.data, null, 2));
+      console.log('📋 game_over詳細レスポンス:', JSON.stringify(gameOverResponse.data, null, 2));
+
+      // 結果を処理 - ディメンション値から最高値を計算
       let maxScoreSingle = 0;
       let maxScoreTA = 0;
       let maxChainLengthSingle = 0;
       let maxChainLengthTA = 0;
 
-      if (gameEventsResponse.data.rows) {
-        gameEventsResponse.data.rows.forEach(row => {
-          const dimensionValues = row.dimensionValues || [];
-          
-          // ディメンション値からパラメータ値を取得
-          // 0: eventName, 1: game_mode, 2: score, 3: chain_length
-          const eventName = dimensionValues[0]?.value;
-          const gameMode = dimensionValues[1]?.value;
-          const score = parseInt(dimensionValues[2]?.value || '0');
-          const chainLength = parseInt(dimensionValues[3]?.value || '0');
+      // game_clearとgame_overの両方のデータから最高値を取得
+      [...(gameClearResponse.data.rows || []), ...(gameOverResponse.data.rows || [])].forEach(row => {
+        const dimensionValues = row.dimensionValues || [];
+        
+        // ディメンション値からパラメータ値を取得
+        // 0: game_mode, 1: score, 2: chain_length
+        const gameMode = dimensionValues[0]?.value;
+        const score = parseInt(dimensionValues[1]?.value || '0');
+        const chainLength = parseInt(dimensionValues[2]?.value || '0');
 
-          console.log('🔍 処理中:', { eventName, gameMode, score, chainLength });
+        console.log('🔍 処理中:', { gameMode, score, chainLength });
 
-          // モード別に分けて最高値を更新
-          if (gameMode === 'single') {
-            if (score > maxScoreSingle) maxScoreSingle = score;
-            if (chainLength > maxChainLengthSingle) maxChainLengthSingle = chainLength;
-          } else if (gameMode === 'timeattack') {
-            if (score > maxScoreTA) maxScoreTA = score;
-            if (chainLength > maxChainLengthTA) maxChainLengthTA = chainLength;
-          }
-        });
-      }
-
-      // 現在のstats.jsonの値と比較
-      const currentStats = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'stats.json'), 'utf8'));
-      
-      console.log('📊 現在の記録:', {
-        maxScore: currentStats.maxScore,
-        maxScoreTA: currentStats.maxScoreTA,
-        maxChainLength: currentStats.maxChainLength,
-        maxChainLengthTA: currentStats.maxChainLengthTA
+        // モード別に分けて最高値を更新
+        if (gameMode === 'single') {
+          if (score > maxScoreSingle) maxScoreSingle = score;
+          if (chainLength > maxChainLengthSingle) maxChainLengthSingle = chainLength;
+        } else if (gameMode === 'timeattack') {
+          if (score > maxScoreTA) maxScoreTA = score;
+          if (chainLength > maxChainLengthTA) maxChainLengthTA = chainLength;
+        }
       });
 
-      console.log('📊 計算された記録:', {
-        maxScoreSingle,
-        maxScoreTA,
-        maxChainLengthSingle,
-        maxChainLengthTA
-      });
+      stats.maxScore = maxScoreSingle;
+      stats.maxScoreTA = maxScoreTA;
+      stats.maxChainLength = maxChainLengthSingle;
+      stats.maxChainLengthTA = maxChainLengthTA;
 
-      // より高い値で更新
-      stats.maxScore = Math.max(currentStats.maxScore, maxScoreSingle);
-      stats.maxScoreTA = Math.max(currentStats.maxScoreTA, maxScoreTA);
-      stats.maxChainLength = Math.max(currentStats.maxChainLength, maxChainLengthSingle);
-      stats.maxChainLengthTA = Math.max(currentStats.maxChainLengthTA, maxChainLengthTA);
-
-      console.log(`📊 最終記録:`);
+      console.log(`📊 モード別最高記録:`);
       console.log(`- シングル最高スコア: ${stats.maxScore}`);
       console.log(`- シングル最長チェーン: ${stats.maxChainLength}`);
       console.log(`- TA最高スコア: ${stats.maxScoreTA}`);
       console.log(`- TA最長チェーン: ${stats.maxChainLengthTA}`);
 
     } catch (customError) {
-      console.warn('⚠️ 個別レコード取得に失敗:', customError.message);
-      console.log('💡 イベントパラメータが正しく設定されていない可能性があります');
+      console.warn('⚠️ イベント詳細の取得に失敗:', customError.message);
+      console.log('💡 ガイド設定のイベントパラメータ名が正しくない可能性があります');
+      console.log('📋 GA4設定ガイド: docs/development/ga4-setup-guide.md を参照してください');
       
       // エラー情報をstatsに追加
-      stats.error = `個別レコード取得に失敗: ${customError.message}`;
+      stats.error = `イベント詳細の取得に失敗: ${customError.message}`;
       
-      // エラー時は現在の値を維持
-      const currentStats = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'stats.json'), 'utf8'));
-      stats.maxScore = currentStats.maxScore;
-      stats.maxScoreTA = currentStats.maxScoreTA;
-      stats.maxChainLength = currentStats.maxChainLength;
-      stats.maxChainLengthTA = currentStats.maxChainLengthTA;
+      // イベント詳細取得失敗時はデフォルト値を維持
+      stats.maxScore = 0;
+      stats.maxScoreTA = 0;
+      stats.maxChainLength = 0;
+      stats.maxChainLengthTA = 0;
     }
 
     // 最も使用されたPokemon名の統計を取得
@@ -283,10 +269,10 @@ async function fetchAnalyticsData() {
         requestBody: {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
           dimensions: [
-            { name: 'customEvent:pokemon_name' }
+            ({ name: 'customEvent:pokemon_name' })
           ],
           metrics: [
-            { name: 'eventCount' }
+            ({ name: 'eventCount' })
           ],
           dimensionFilter: {
             filter: {
@@ -308,14 +294,17 @@ async function fetchAnalyticsData() {
       
       // 最も使用されたPokemon名を統計に追加
       if (pokemonStatsResponse.data.rows && pokemonStatsResponse.data.rows.length > 0) {
-        const topPokemon = pokemonStatsResponse.data.rows[0];
-        const pokemonName = topPokemon.dimensionValues?.[0]?.value;
-        const usageCount = parseInt(topPokemon.metricValues?.[0]?.value || '0');
-        
-        if (pokemonName && pokemonName !== '(not set)') {
-          stats.mostUsedPokemon = pokemonName;
-          stats.mostUsedPokemonCount = usageCount;
-          console.log(`🏆 最も使用されたPokemon: ${pokemonName} (${usageCount}回)`);
+        // (not set)を除いて最初の有効なPokemonを取得
+        for (const row of pokemonStatsResponse.data.rows) {
+          const pokemonName = row.dimensionValues?.[0]?.value;
+          const usageCount = parseInt(row.metricValues?.[0]?.value || '0');
+          
+          if (pokemonName && pokemonName !== '(not set)') {
+            stats.mostUsedPokemon = pokemonName;
+            stats.mostUsedPokemonCount = usageCount;
+            console.log(`🏆 最も使用されたPokemon: ${pokemonName} (${usageCount}回)`);
+            break;
+          }
         }
       }
     } catch (pokemonError) {
@@ -325,58 +314,31 @@ async function fetchAnalyticsData() {
     // 実際に送信されているイベントパラメータを確認
     console.log('🔍 実際のイベントパラメータを確認中...');
     try {
-      // game_clearイベントの詳細パラメータを確認
-      const gameClearParamsResponse = await analyticsdata.properties.runReport({
+      const eventParamsResponse = await analyticsdata.properties.runReport({
         property: `properties/${propertyId}`,
         requestBody: {
           dateRanges: [{ startDate: startDate, endDate: endDate }],
           dimensions: [
-            { name: 'customEvent:game_mode' },
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
+            ({ name: 'eventName' })
           ],
           metrics: [
-            { name: 'eventCount' }
+            ({ name: 'eventCount' })
           ],
           dimensionFilter: {
             filter: {
               fieldName: 'eventName',
-              stringFilter: { value: 'game_clear' }
+              inListFilter: {
+                values: ['game_clear', 'game_over', 'pokemon_answer']
+              }
             }
           },
           limit: 10
         }
       });
       
-      console.log('📋 game_clearパラメータ詳細:', JSON.stringify(gameClearParamsResponse.data, null, 2));
-      
-      // game_overイベントの詳細パラメータを確認
-      const gameOverParamsResponse = await analyticsdata.properties.runReport({
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [{ startDate: startDate, endDate: endDate }],
-          dimensions: [
-            { name: 'customEvent:game_mode' },
-            { name: 'customEvent:score' },
-            { name: 'customEvent:chain_length' }
-          ],
-          metrics: [
-            { name: 'eventCount' }
-          ],
-          dimensionFilter: {
-            filter: {
-              fieldName: 'eventName',
-              stringFilter: { value: 'game_over' }
-            }
-          },
-          limit: 10
-        }
-      });
-      
-      console.log('📋 game_overパラメータ詳細:', JSON.stringify(gameOverParamsResponse.data, null, 2));
-      
+      console.log('📋 イベント一覧:', JSON.stringify(eventParamsResponse.data, null, 2));
     } catch (eventError) {
-      console.warn('⚠️ イベントパラメータ確認でエラー:', eventError.message);
+      console.warn('⚠️ イベント確認でエラー:', eventError.message);
     }
 
     console.log('📊 取得した統計データ:');
@@ -399,6 +361,7 @@ async function fetchAnalyticsData() {
     const defaultStats = {
       totalPokemonAnswers: 0,
       totalGameClears: 0,
+      totalGameOvers: 0,
       totalGameOvers: 0,
       totalGames: 0,
       clearRate: 0,

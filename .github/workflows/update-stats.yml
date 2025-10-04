@@ -48,6 +48,9 @@ jobs:
         echo "🔍 Google Analytics データを取得中..."
         node scripts/fetch-analytics.js
         
+        echo "🏆 最高記録をカスタムディメンションから取得中..."
+        node scripts/fetch-maximums-from-dimensions.js
+        
     - name: 💾 Commit and Push Updated Stats
       run: |
         git config --local user.email "action@github.com"
