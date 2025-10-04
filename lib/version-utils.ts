@@ -8,7 +8,9 @@
  */
 export async function getCurrentVersion(): Promise<string> {
   try {
-    const response = await fetch('/version/version.txt', {
+    // GitHub PagesのbasePathを考慮
+    const basePath = process.env.NODE_ENV === 'production' ? '/pokeshiri-game' : ''
+    const response = await fetch(`${basePath}/version/version.txt`, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache',
@@ -24,7 +26,7 @@ export async function getCurrentVersion(): Promise<string> {
   } catch (error) {
     console.error('バージョン取得エラー:', error)
     // フォールバック: package.jsonから取得
-    return "1.0.1"
+    return "1.0.2"
   }
 }
 
@@ -32,7 +34,7 @@ export async function getCurrentVersion(): Promise<string> {
  * 現在のバージョン（同期版）
  * サーバーサイドで使用
  */
-export const CURRENT_VERSION = "1.0.1"
+export const CURRENT_VERSION = "1.0.2"
 
 /**
  * バージョン情報ファイルのURL
@@ -76,7 +78,9 @@ export function isNewerVersion(currentVersion: string, latestVersion: string): b
  */
 export async function fetchLatestVersion(): Promise<string> {
   try {
-    const response = await fetch(VERSION_URL, {
+    // GitHub PagesのbasePathを考慮
+    const basePath = process.env.NODE_ENV === 'production' ? '/pokeshiri-game' : ''
+    const response = await fetch(`${basePath}/version/version.txt`, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache',

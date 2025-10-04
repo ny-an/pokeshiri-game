@@ -19,6 +19,8 @@ interface GameStats {
   maxScoreTA: number // タイムアタックモードの最高スコア
   maxChainLength: number // シングルモードの最長チェーン（後方互換性）
   maxChainLengthTA: number // タイムアタックモードの最長チェーン
+  mostUsedPokemon?: string // 最も使われているポケモン名
+  mostUsedPokemonCount?: number // 最も使われているポケモンの使用回数
   serviceStartDate: string
   lastUpdated: string
   error?: string
@@ -102,7 +104,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              📊 ゲーム統計（累計）
+              ゲーム統計
             </DialogTitle>
           </DialogHeader>
           <div className="p-6">
@@ -148,7 +150,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            📊 ゲーム統計（累計）
+            ゲーム統計
           </DialogTitle>
           <DialogDescription>
             最終更新: {formatDate(stats.lastUpdated)}
@@ -160,7 +162,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                👤 あなたの記録
+                あなたの記録
               </CardTitle>
               <CardDescription>
                 あなたの個人統計データ
@@ -305,14 +307,61 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             </CardContent>
           </Card>
 
-          {/* 累計データ */}
+          {/* 🌍 全体統計 */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                📊 累計データ
+                みんなの記録
               </CardTitle>
+              <CardDescription>
+                全プレイヤーの統計データ
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* メイン統計 - 1行2項目表示 */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* 総回答数 */}
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-xl font-bold text-blue-600">
+                    {stats.totalPokemonAnswers.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-blue-800 font-medium">
+                    総回答数
+                  </div>
+                </div>
+
+                {/* クリア数 */}
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-xl font-bold text-green-600">
+                    {stats.totalGameClears.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-green-800 font-medium">
+                    クリア数
+                  </div>
+                </div>
+
+                {/* ゲームオーバー数 */}
+                <div className="text-center p-3 bg-red-50 rounded-lg">
+                  <div className="text-xl font-bold text-red-600">
+                    {stats.totalGameOvers.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-red-800 font-medium">
+                    オーバー数
+                  </div>
+                </div>
+
+                {/* 成功率 */}
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <div className="text-xl font-bold text-purple-600">
+                    {stats.clearRate.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-purple-800 font-medium">
+                    成功率
+                  </div>
+                </div>
+              </div>
+
+              {/* 累計データ詳細 - 1行2項目表示 */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <div className="text-base font-bold text-gray-700">
@@ -331,6 +380,18 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                   </div>
                 </div>
               </div>
+
+              {/* 最も使われているポケモン */}
+              {stats.mostUsedPokemon && stats.mostUsedPokemonCount && (
+                <div className="text-center p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                  <div className="text-lg font-bold text-yellow-700 mb-1">
+                    🏆 {stats.mostUsedPokemon}
+                  </div>
+                  <div className="text-sm text-yellow-600 font-medium">
+                    最も使われているポケモン ({stats.mostUsedPokemonCount}回使用)
+                  </div>
+                </div>
+              )}
               
               {stats.error && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -346,66 +407,11 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
             </CardContent>
           </Card>
 
-          {/* 全体統計 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                🌍 全体統計
-              </CardTitle>
-              <CardDescription>
-                全プレイヤーの統計データ
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-            {/* 総回答数 */}
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-xl font-bold text-blue-600">
-                {stats.totalPokemonAnswers.toLocaleString()}
-              </div>
-              <div className="text-xs text-blue-800 font-medium">
-                総回答数
-              </div>
-            </div>
-
-            {/* クリア数 */}
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-xl font-bold text-green-600">
-                {stats.totalGameClears.toLocaleString()}
-              </div>
-              <div className="text-xs text-green-800 font-medium">
-                クリア数
-              </div>
-            </div>
-
-            {/* ゲームオーバー数 */}
-            <div className="text-center p-3 bg-red-50 rounded-lg">
-              <div className="text-xl font-bold text-red-600">
-                {stats.totalGameOvers.toLocaleString()}
-              </div>
-              <div className="text-xs text-red-800 font-medium">
-                オーバー数
-              </div>
-            </div>
-
-            {/* 成功率 */}
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-xl font-bold text-purple-600">
-                {stats.clearRate.toFixed(1)}%
-              </div>
-              <div className="text-xs text-purple-800 font-medium">
-                成功率
-              </div>
-            </div>
-          </div>
-            </CardContent>
-          </Card>
-
           {/* 記録統計 */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                🏆 記録統計
+                世界最高記録
               </CardTitle>
               <CardDescription>
                 全プレイヤーの最高記録
@@ -474,6 +480,7 @@ export function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 )}
               </CardContent>
             </Card>
+
 
           {/* 初回表示の場合のメッセージ */}
           {stats.totalGames === 0 && (
