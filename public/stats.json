@@ -1,10 +1,10 @@
 {
-  "totalPokemonAnswers": 5292,
+  "totalPokemonAnswers": 5305,
   "totalGameClears": 126,
   "totalGameOvers": 629,
   "totalGames": 755,
   "clearRate": 16.688741721854306,
-  "averageAnswersPerGame": 7.009271523178808,
+  "averageAnswersPerGame": 7.026490066225166,
   "maxScore": 2111,
   "maxScoreTA": 276,
   "maxChainLength": 135,
@@ -12,5 +12,5 @@
   "mostUsedPokemon": "ルカリオ",
   "mostUsedPokemonCount": 96,
   "serviceStartDate": "2024-01-15",
-  "lastUpdated": "2025-10-07T09:14:33.367Z"
+  "lastUpdated": "2025-10-07T12:26:42.517Z"
 }
