@@ -9,8 +9,8 @@
   "maxScoreTA": 0,
   "maxChainLength": 0,
   "maxChainLengthTA": 0,
-  "mostUsedPokemon": null,
-  "mostUsedPokemonCount": 0,
+  "mostUsedPokemon": "ルカリオ",
+  "mostUsedPokemonCount": 128,
   "serviceStartDate": "2024-01-15",
-  "lastUpdated": "2026-03-25T09:45:04.738Z"
+  "lastUpdated": "2026-03-25T12:51:33.459Z"
 }
