@@ -4,41 +4,40 @@ on:
   # 3時間ごとに実行（基本統計）
   schedule:
     - cron: '0 */3 * * *'
-  
+
   # 手動実行も可能
   workflow_dispatch:
 
-# GitHub Pagesへのデプロイ権限
+# stats.json のコミットと、変更時の deploy.yml 起動に必要
 permissions:
-  contents: write  # stats.jsonの更新とコミットに必要
-  pages: write
-  id-token: write
+  contents: write
+  actions: write
 
-# 同時実行を防ぐ
+# Pages デプロイとは別グループにし、deploy.yml との競合を避ける
 concurrency:
-  group: "pages"
+  group: "update-stats"
   cancel-in-progress: false
 
 jobs:
-  update-stats-and-deploy:
+  update-stats:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
-        
+
     - name: 📦 Install dependencies
       run: npm ci
-      
+
     - name: 🔄 Update Version File
       run: npm run update-version
-      
+
     - name: 📊 Fetch Analytics Data
       env:
         GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
@@ -51,38 +50,30 @@ jobs:
         echo "🔍 Google Analytics データを取得中..."
         echo "📊 全統計データを取得します（基本統計 + 最高記録 + Pokemon統計）"
         node scripts/fetch-stats.js
-        
+
     - name: 💾 Commit and Push Updated Stats
+      id: commit
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add public/stats.json public/version/version.txt
         if git diff --staged --quiet; then
           echo "📊 統計データに変更はありません"
+          echo "changed=false" >> "$GITHUB_OUTPUT"
         else
           git commit -m "📊 統計データを自動更新 - $(TZ='Asia/Tokyo' date '+%Y-%m-%d %H:%M:%S JST')"
           git push
           echo "✅ 統計データを更新しました"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
         fi
-        
-    - name: 🏗️ Build Next.js application
+
+    # GITHUB_TOKEN による push は他ワークフローを起動しないため、
+    # Pages デプロイは deploy.yml を明示的に dispatch する（単一デプロイ経路）
+    - name: 🚀 Trigger Pages deploy
+      if: steps.commit.outputs.changed == 'true'
       env:
-        NODE_ENV: production
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "🏗️ Next.js アプリケーションをビルド中..."
-        npm run build
-        
-    - name: 📤 Upload Pages artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: ./out
-        
-    - name: 🚀 Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      
-    - name: ✅ Deployment Summary
-      run: |
-        echo "🎉 デプロイが完了しました!"
-        echo "📊 統計データが更新されました"
-        echo "🌐 サイトURL: ${{ steps.deployment.outputs.page_url }}"
+        echo "📡 Deploy to GitHub Pages ワークフローを起動します..."
+        gh workflow run "Deploy to GitHub Pages" --ref main
+        echo "✅ デプロイワークフローを起動しました（Pages の実デプロイは deploy.yml のみ）"
