@@ -5,55 +5,91 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  # update-stats.yml などから明示起動（GITHUB_TOKEN push では起動されないため）
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
-  deployments: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
+
     - name: Setup pnpm
       uses: pnpm/action-setup@v2
       with:
         version: 8
-        
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'pnpm'
-        
+
     - name: Install dependencies
       run: pnpm install
-      
+
     - name: Build
       run: pnpm run build
       env:
         NODE_ENV: production
-        
+
+    # PR ではビルド検証のみ。Pages 成果物の upload / deploy は本番経路だけ。
     - name: Setup Pages
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       uses: actions/configure-pages@v4
-      
+
     - name: Upload artifact
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       uses: actions/upload-pages-artifact@v3
       with:
         path: ./out
-        
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.final.outputs.page_url }}
+
+    steps:
+    # Pages / Actions の一過性障害（503 / "try again later" / timeout）向けに1回だけ再試行
     - name: Deploy to GitHub Pages
       id: deployment
+      continue-on-error: true
       uses: actions/deploy-pages@v4
+
+    - name: Wait before deploy retry
+      if: steps.deployment.outcome == 'failure'
+      run: |
+        echo "⚠️ 初回デプロイが失敗しました。30秒待って再試行します..."
+        sleep 30
+
+    - name: Retry Deploy to GitHub Pages
+      id: deployment-retry
+      if: steps.deployment.outcome == 'failure'
+      uses: actions/deploy-pages@v4
+
+    - name: Resolve deployment URL
+      id: final
+      run: |
+        if [ "${{ steps.deployment.outcome }}" = "success" ]; then
+          echo "page_url=${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_OUTPUT"
+        elif [ "${{ steps.deployment-retry.outcome }}" = "success" ]; then
+          echo "page_url=${{ steps.deployment-retry.outputs.page_url }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "❌ GitHub Pages へのデプロイに失敗しました"
+          exit 1
+        fi
+        echo "🌐 Site URL: $(grep page_url "$GITHUB_OUTPUT" | cut -d= -f2-)"
